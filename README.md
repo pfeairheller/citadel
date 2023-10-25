@@ -1,2 +1,2 @@
-# citadel
+# Citadel
 Heavy Weight KERI Wallet
