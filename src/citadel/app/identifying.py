@@ -73,6 +73,8 @@ class Identifiers(ft.Column):
                         ft.PopupMenuItem(text="Delete", icon=ft.icons.DELETE_FOREVER),
                     ],
                 ),
+                on_click=self.viewIdentifier,
+                data=hab,
             )
             self.list.controls.append(tile)
 
