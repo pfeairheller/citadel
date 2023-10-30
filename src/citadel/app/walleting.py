@@ -3,7 +3,7 @@ from time import sleep
 import flet as ft
 from citadel.tasks import oobiing
 from keri import kering
-from keri.app import configing, habbing, keeping, connecting, indirecting, directing
+from keri.app import configing, habbing, keeping, connecting, directing
 from keri.app.keeping import Algos
 from keri.core import eventing, coring
 from keri.core.coring import Tiers
@@ -37,7 +37,6 @@ class CitadelApp:
 
         self.page.window_width = 800
         self.page.window_height = 600
-        self.page.update()
 
         self.username = ft.TextField(value=DEFAULT_USERNAME)
         self.passcode = ft.TextField(value=DEFAULT_PASSCODE, password=True)
@@ -143,40 +142,40 @@ class CitadelApp:
             )]),
         ], expand=True)
 
-    def switchPane(self, idx):
+    async def switchPane(self, idx):
         match idx:
             case 0:
                 if self.hby is None:
-                    self.open_dlg_modal(idx)
+                    await self.open_dlg_modal(idx)
                     return
 
-                self.showIdentifiers()
+                await self.showIdentifiers()
             case 1:
                 if self.hby is None:
-                    self.open_dlg_modal(idx)
+                    await self.open_dlg_modal(idx)
                     return
 
                 self.showWitnesses()
             case 2:
                 if self.hby is None:
-                    self.open_dlg_modal(idx)
+                    await self.open_dlg_modal(idx)
                     return
 
-                self.showCredentials()
+                await self.showCredentials()
             case 3:
                 if self.hby is None:
-                    self.open_dlg_modal(idx)
+                    await self.open_dlg_modal(idx)
                     return
 
-                self.showContacts()
+                await self.showContacts()
 
             case 4:
-                self.showSettings()
+                await self.showSettings()
 
-    def showNotifications(self, e=None):
+    async def showNotifications(self, e=None):
         self.main.controls.pop()
         self.main.controls.append(self.notifications)
-        self.page.update()
+        await self.page.update_async()
         self.reloadNotes()
         self.notifications.setNotes(self.notes)
         self.rail.selected_index = None
@@ -191,44 +190,44 @@ class CitadelApp:
             self.notificationsButton.icon = ft.icons.NOTIFICATIONS_ACTIVE_SHARP
             self.notificationsButton.icon_color = "yellow"
 
-    def showIdentifiers(self):
+    async def showIdentifiers(self):
         self.main.controls.pop()
         self.main.controls.append(self.identifiers)
-        self.main.update()
-        self.refreshIdentifiers()
+        await self.main.update_async()
+        await self.refreshIdentifiers()
         self.page.floating_action_button = ft.FloatingActionButton(
             icon=ft.icons.ADD, on_click=self.identifiers.add_identifier, bgcolor="#51dac5"
         )
-        self.page.update()
+        await self.page.update_async()
 
-    def refreshIdentifiers(self):
+    async def refreshIdentifiers(self):
         aids = self.hby.habs.values()
 
-        self.identifiers.setIdentifiers(aids)
-        self.identifiers.update()
+        await self.identifiers.setIdentifiers(aids)
+        await self.identifiers.update_async()
 
-    def showCredentials(self):
+    async def showCredentials(self):
         self.main.controls.pop()
         self.main.controls.append(self.credentials)
         self.page.floating_action_button = None
-        self.main.update()
-        self.page.update()
+        await self.main.update_async()
+        await self.page.update_async()
         self.refreshCredentials()
 
     def refreshCredentials(self):
         pass
 
-    def showContacts(self):
+    async def showContacts(self):
         self.main.controls.pop()
         self.main.controls.append(self.contacts)
-        self.main.update()
-        self.refreshContacts()
+        await self.main.update_async()
+        await self.refreshContacts()
         self.page.floating_action_button = ft.FloatingActionButton(
             icon=ft.icons.ADD, on_click=self.contacts.addContact, bgcolor="#51dac5"
         )
-        self.page.update()
+        await self.page.update_async()
 
-    def refreshContacts(self):
+    async def refreshContacts(self):
         org = connecting.Organizer(hby=self.hby)
         contacts = []
         for c in org.list():
@@ -253,37 +252,37 @@ class CitadelApp:
 
             contacts.append(c)
 
-        self.contacts.setContacts(contacts)
-        self.contacts.update()
+        await self.contacts.setContacts(contacts)
+        await self.contacts.update_async()
 
     def showWitnesses(self):
         pass
 
-    def showSettings(self):
+    async def showSettings(self):
         self.main.controls.pop()
         self.main.controls.append(self.settings)
-        self.main.update()
+        await self.main.update_async()
         self.page.floating_action_button = None
-        self.page.update()
+        await self.page.update_async()
 
 
-    def cancel_connect(self, e):
+    async def cancel_connect(self, e):
         self.connectDialog.open = False
-        self.page.update()
+        await self.page.update_async()
 
-    def initialize(self, e):
+    async def initialize(self, e):
         self.connectDialog.open = False
-        self.page.update()
+        await self.page.update_async()
 
         self.page.dialog = self.initializeDialog
         self.initializeDialog.open = True
-        self.page.update()
+        await self.page.update_async()
 
-    def closeInitialize(self, e):
+    async def closeInitialize(self, e):
         self.initializeDialog.open = False
-        self.page.update()
+        await self.page.update_async()
 
-    def generateHby(self, e):
+    async def generateHby(self, e):
         self.initializeDialog.open = False
         cf = configing.Configer(name="demo-witness-oobis-schema",
                                 base="",
@@ -306,9 +305,9 @@ class CitadelApp:
         directing.runController([oobiing.OOBIAuther(hby=hby)])
 
         hby.close()
-        self.page.update()
+        await self.page.update_async()
 
-    def connect(self, e):
+    async def connect(self, e):
         self.connectDialog.open = False
         bran = self.passcode.value
 
@@ -324,11 +323,10 @@ class CitadelApp:
                             cf=cf,
                             reopen=True)
 
-
         aeid = ks.gbls.get('aeid')
         if aeid is None:
             print("Keystore must already exist, exiting")
-            self.snack(f"Invalid Username or Passcode, please try again...")
+            await self.snack(f"Invalid Username or Passcode, please try again...")
             return
 
         ks.close()
@@ -341,7 +339,7 @@ class CitadelApp:
                 hby = habbing.Habery(name=self.username.value, bran=bran, cf=cf, free=True)
                 break
             except (kering.AuthError, ValueError):
-                self.snack(f"Invalid Username or Passcode, please try again...")
+                await self.snack(f"Invalid Username or Passcode, please try again...")
                 return
 
         self.hby = hby
@@ -352,9 +350,9 @@ class CitadelApp:
         self.reloadWitnessesAndMembers()
 
         if self.connectDialog.data is not None:
-            self.switchPane(self.connectDialog.data)
+            await self.switchPane(self.connectDialog.data)
 
-        self.page.update()
+        await self.page.update_async()
 
     def reloadWitnessesAndMembers(self):
         org = connecting.Organizer(hby=self.hby)
@@ -369,6 +367,9 @@ class CitadelApp:
                 self.members.append(contact)
 
     def build(self):
+        async def switch(e):
+            await self.switchPane(e.control.selected_index)
+
         self.rail = ft.NavigationRail(
             selected_index=None,
             label_type=ft.NavigationRailLabelType.ALL,
@@ -400,7 +401,7 @@ class CitadelApp:
                     label_content=ft.Text("Settings"),
                 ),
             ],
-            on_change=lambda e: self.switchPane(e.control.selected_index),
+            on_change=switch,
         )
 
         return ft.Row(
@@ -412,20 +413,20 @@ class CitadelApp:
             expand=True,
         )
 
-    def open_dlg_modal(self, idx):
+    async def open_dlg_modal(self, idx):
         self.page.dialog = self.connectDialog
         self.connectDialog.open = True
         self.connectDialog.data = idx
-        self.page.update()
+        await self.page.update_async()
 
-    def exitApp(self, e):
-        self.page.window_destroy()
+    async def exitApp(self, e):
+        await self.page.window_destroy_async()
 
-    def snack(self, message, duration=5000):
+    async def snack(self, message, duration=5000):
         self.page.snack_bar = ft.SnackBar(ft.Text(message),
                                           duration=duration)
         self.page.snack_bar.open = True
-        self.page.update()
+        await self.page.update_async()
 
 
 class Notifications(ft.Container):
@@ -503,7 +504,7 @@ class Notifications(ft.Container):
                     )
                     self.list.controls.append(tile)
 
-        self.update()
+        self.update_async()
 
     def view(self, e=None):
         groups = self.client.groups()
@@ -545,7 +546,7 @@ class Notifications(ft.Container):
                 ])
             ]),
             padding=ft.padding.symmetric(vertical=10))
-        self.update()
+        self.update_async()
 
     def viewIss(self, e=None):
         groups = self.client.groups()
@@ -603,9 +604,9 @@ class Notifications(ft.Container):
                 ])
             ]),
             padding=ft.padding.symmetric(vertical=10))
-        self.update()
+        self.update_async()
 
-    def approveVcp(self, e):
+    async def approveVcp(self, e):
         req = e.control.data
         exn = req['exn']
         exchanges = self.client.exchanges()
@@ -649,7 +650,7 @@ class Notifications(ft.Container):
 
         self.page.dialog = dlg_modal
         dlg_modal.open = True
-        self.page.update()
+        await self.page.update_async()
 
     def deleteNote(self, e):
         if self.selected is not None:
@@ -658,15 +659,15 @@ class Notifications(ft.Container):
 
         self.dismiss(e)
 
-    def dismiss(self, e):
+    async def dismiss(self, e):
         self.page.dialog.open = False
         self.app.reloadNotes()
         self.setNotes(self.app.notes)
 
         self.title.value = "Notifications"
         self.card.content = self.list
-        self.update()
-        self.page.update()
+        await self.update_async()
+        await self.page.update_async()
 
     def build(self):
         return ft.Column([

@@ -1,6 +1,5 @@
 import io
 import base64
-from time import sleep
 from urllib.parse import urlparse, urljoin
 
 import flet as ft
@@ -32,18 +31,18 @@ class Identifiers(ft.Column):
             ft.Row([self.card])
         ], expand=True, scroll=ft.ScrollMode.ALWAYS)
 
-    def add_identifier(self, _):
+    async def add_identifier(self, _):
         self.title.value = "Create Identifier"
         self.app.page.floating_action_button = None
 
         identifierPanel = CreateIdentifierPanel(self.app)
         self.card.content = identifierPanel
-        self.card.update()
-        self.app.page.update()
+        await self.card.update_async()
+        await self.app.page.update_async()
 
-        identifierPanel.update()
+        await identifierPanel.update_async()
 
-    def setIdentifiers(self, habs):
+    async def setIdentifiers(self, habs):
         self.title.value = "Identifiers"
         self.card.content = self.list
         self.list.controls.clear()
@@ -78,17 +77,17 @@ class Identifiers(ft.Column):
             )
             self.list.controls.append(tile)
 
-        self.update()
+        await self.update_async()
 
-    def viewIdentifier(self, e):
+    async def viewIdentifier(self, e):
         hab = e.control.data
 
         viewPanel = ViewIdentifierPanel(self.app, hab)
         self.card.content = viewPanel
-        self.card.update()
-        self.app.page.update()
+        await self.card.update_async()
+        await self.app.page.update_async()
 
-        viewPanel.update()
+        await viewPanel.update_async()
 
     def build(self):
         return ft.Column([
@@ -128,12 +127,12 @@ class ViewIdentifierPanel(ft.UserControl):
 
         self.oobiTabs = ft.Column()
 
-        def copy(e):
+        async def copy(e):
             self.app.page.set_clipboard(e.control.data)
 
             self.page.snack_bar = ft.SnackBar(ft.Text(f"OOBI URL Copied!"), duration=2000)
             self.page.snack_bar.open = True
-            self.page.update()
+            await self.page.update_async()
 
         for role in ('agent', 'mailbox', 'witness'):
             oobi = self.loadOOBIs(role)
@@ -265,8 +264,8 @@ class ViewIdentifierPanel(ft.UserControl):
 
         return []
 
-    def close(self, _):
-        self.app.showIdentifiers()
+    async def close(self, _):
+        await self.app.showIdentifiers()
 
 
 class CreateIdentifierPanel(ft.UserControl):
@@ -301,7 +300,7 @@ class CreateIdentifierPanel(ft.UserControl):
 
         def resalt(_):
             self.salt.value = coring.randomNonce()[2:23]
-            self.salt.update()
+            self.salt.update_async()
 
         self.salty = ft.Column([
             ft.Row([
@@ -379,7 +378,7 @@ class CreateIdentifierPanel(ft.UserControl):
                 self.keyTypePanel.content = self.randy
             case "group":
                 self.keyTypePanel.content = self.group
-        self.update()
+        self.update_async()
 
     def addWitness(self, _):
         if not self.witnessDropdown.value:
@@ -397,10 +396,10 @@ class CreateIdentifierPanel(ft.UserControl):
                 self.witnessDropdown.options.remove(option)
 
         self.toad.value = str(self.recommendedThold(len(self.witnessList.controls)))
-        self.toad.update()
+        self.toad.update_async()
         self.witnessDropdown.value = None
-        self.witnessDropdown.update()
-        self.witnessList.update()
+        self.witnessDropdown.update_async()
+        self.witnessList.update_async()
 
     def deleteWitness(self, e):
         aid = e.control.data
@@ -411,9 +410,9 @@ class CreateIdentifierPanel(ft.UserControl):
                 break
 
         self.toad.value = str(self.recommendedThold(len(self.witnessList.controls)))
-        self.toad.update()
-        self.witnessDropdown.update()
-        self.witnessList.update()
+        self.toad.update_async()
+        self.witnessDropdown.update_async()
+        self.witnessList.update_async()
 
     def addMember(self, _):
         if self.signingDropdown.value is None:
@@ -433,8 +432,8 @@ class CreateIdentifierPanel(ft.UserControl):
                 self.signingDropdown.options.remove(option)
 
         self.signingDropdown.value = None
-        self.signingDropdown.update()
-        self.signingList.update()
+        self.signingDropdown.update_async()
+        self.signingList.update_async()
 
     def enableRotationMembers(self, e):
         self.rotationDropdown.disabled = not e.control.value
@@ -445,10 +444,10 @@ class CreateIdentifierPanel(ft.UserControl):
         self.rotationDropdown.border_color = "#51dac5" if e.control.value \
             else ft.colors.with_opacity(0.25, ft.colors.GREY)
 
-        self.rotationList.update()
-        self.rotationDropdown.update()
-        self.rotSith.update()
-        self.rotationAddButton.update()
+        self.rotationList.update_async()
+        self.rotationDropdown.update_async()
+        self.rotSith.update_async()
+        self.rotationAddButton.update_async()
 
     def addRotation(self, _):
         if self.rotationDropdown.value is None:
@@ -468,8 +467,8 @@ class CreateIdentifierPanel(ft.UserControl):
                 self.rotationDropdown.options.remove(option)
 
         self.rotationDropdown.value = None
-        self.rotationDropdown.update()
-        self.rotationList.update()
+        self.rotationDropdown.update_async()
+        self.rotationList.update_async()
 
     def deleteMember(self, e):
         aid = e.control.data
@@ -480,9 +479,9 @@ class CreateIdentifierPanel(ft.UserControl):
                 break
 
         self.toad.value = str(self.recommendedThold(len(self.signingList.controls)))
-        self.toad.update()
-        self.signingDropdown.update()
-        self.signingList.update()
+        self.toad.update_async()
+        self.signingDropdown.update_async()
+        self.signingList.update_async()
 
     def deleteRotation(self, e):
         aid = e.control.data
@@ -493,11 +492,11 @@ class CreateIdentifierPanel(ft.UserControl):
                 break
 
         self.toad.value = str(self.recommendedThold(len(self.rotationList.controls)))
-        self.toad.update()
-        self.rotationDropdown.update()
-        self.rotationList.update()
+        self.toad.update_async()
+        self.rotationDropdown.update_async()
+        self.rotationList.update_async()
 
-    def createAid(self, _):
+    async def createAid(self, _):
 
         if self.alias.value == "":
             return
@@ -550,7 +549,7 @@ class CreateIdentifierPanel(ft.UserControl):
 
         self.page.snack_bar = ft.SnackBar(ft.Text(f"Creating {self.alias.value}..."), duration=5000)
         self.page.snack_bar.open = True
-        self.page.update()
+        await self.page.update_async()
 
         if self.keyType == "group":
             hab = self.app.hby.makeGroupHab(name=self.alias.value, **kwargs)
@@ -560,10 +559,10 @@ class CreateIdentifierPanel(ft.UserControl):
 
         self.page.snack_bar = ft.SnackBar(ft.Text(f"Identifier {hab.pre} created!"), duration=2000)
         self.page.snack_bar.open = True
-        self.page.update()
+        await self.page.update_async()
 
         self.reset()
-        self.app.showIdentifiers()
+        await self.app.showIdentifiers()
 
     def loadWitnesses(self):
         return [ft.dropdown.Option(wit['id']) for wit in self.app.witnesses]
@@ -571,9 +570,9 @@ class CreateIdentifierPanel(ft.UserControl):
     def loadMembers(self):
         return [ft.dropdown.Option(key=idx, text=f"{m['alias']}\n({m['id']})") for idx, m in enumerate(self.app.members)]
 
-    def cancel(self, _):
+    async def cancel(self, _):
         self.reset()
-        self.app.showIdentifiers()
+        await self.app.showIdentifiers()
 
     def reset(self):
         self.alias.value = ""

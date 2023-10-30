@@ -3,6 +3,8 @@
 watopnet.app.cli module
 
 """
+import asyncio
+
 import multicommand
 from keri import help
 
@@ -21,8 +23,7 @@ def main():
         return
 
     try:
-        doers = args.handler(args)
-        directing.runController(doers=doers, expire=0.0)
+        asyncio.run(args.handler(args))
 
     except Exception as ex:
         import os
