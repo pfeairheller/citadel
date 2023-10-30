@@ -11,6 +11,7 @@ from keri import kering
 from keri.app import habbing, directing
 from keri.app.keeping import Algos
 from keri.core import coring
+from keri.core.eventing import TraitCodex
 from keri.db import dbing
 
 
@@ -182,8 +183,12 @@ class ViewIdentifierPanel(ft.UserControl):
                 ft.Text(self.hab.pre, font_family="SourceCodePro")
             ]),
             ft.Row([
+                ft.Text("Establishment Only", weight=ft.FontWeight.BOLD, width=168, size=14),
+                ft.Checkbox(value=True, fill_color="#51dac5", disabled=True)
+            ], visible=kever.estOnly),
+            ft.Row([
                 ft.Text("Sequence Number:", weight=ft.FontWeight.BOLD, width=175),
-                ft.Text(self.hab.kever.sner.num)
+                ft.Text(kever.sner.num)
             ]),
             self.typePanel,
             ft.Container(content=ft.Divider(color="#51dac5"), padding=ft.padding.only(top=10, bottom=10)),
@@ -201,7 +206,7 @@ class ViewIdentifierPanel(ft.UserControl):
                 ]),
                 ft.Row([
                     ft.Text("Threshold:", weight=ft.FontWeight.BOLD, width=175),
-                    ft.Text(self.hab.kever.toader.num)
+                    ft.Text(kever.toader.num)
                 ]),
             ]),
             ft.Container(content=ft.Divider(color="#51dac5"), padding=ft.padding.only(top=10, bottom=10)),
@@ -271,6 +276,7 @@ class CreateIdentifierPanel(ft.UserControl):
         super(CreateIdentifierPanel, self).__init__()
 
         self.alias = ft.TextField(label="Alias", border_color="#51dac5")
+        self.eo = ft.Checkbox(label="Establishment only", value=False, fill_color="#51dac5")
 
         salt = coring.randomNonce()[2:23]
         self.salt = ft.TextField(label="Key Salt", value=salt, password=True, can_reveal_password=True, width=300,
@@ -541,6 +547,7 @@ class CreateIdentifierPanel(ft.UserControl):
 
         kwargs['wits'] = [c.data for c in self.witnessList.controls]
         kwargs['toad'] = self.toad.value
+        kwargs['estOnly'] = self.eo.value
 
         self.page.snack_bar = ft.SnackBar(ft.Text(f"Creating {self.alias.value}..."), duration=5000)
         self.page.snack_bar.open = True
@@ -603,7 +610,8 @@ class CreateIdentifierPanel(ft.UserControl):
         return ft.Container(
             content=ft.Column([
                 ft.Row([
-                    self.alias
+                    self.alias,
+                    self.eo
                 ]),
                 ft.Column([
                     ft.Text("Select Key Type"),
