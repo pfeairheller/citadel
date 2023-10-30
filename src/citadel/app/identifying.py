@@ -11,7 +11,6 @@ from keri import kering
 from keri.app import habbing, directing
 from keri.app.keeping import Algos
 from keri.core import coring
-from keri.core.eventing import TraitCodex
 from keri.db import dbing
 
 
