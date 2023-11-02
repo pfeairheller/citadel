@@ -82,10 +82,10 @@ class SettingsPanel(ft.UserControl):
         self.salt = ft.TextField(label="Key Salt", value=self.app.salt, password=True, can_reveal_password=True, width=300,
                                  border_color=ft.colors.RED_400, on_change=salt_changed)
 
-        def resalt(_):
+        async def resalt(_):
             self.app.salt = coring.randomNonce()[2:23]
             self.salt.value = self.app.salt
-            self.salt.update_async()
+            await self.salt.update_async()
 
         self.salty = ft.Column([
             ft.Row([

@@ -1,6 +1,12 @@
+import asyncio
+
 from hio.base import doing
-from keri.app import habbing, delegating, forwarding, indirecting, agenting
+from keri.app import delegating, forwarding, indirecting, agenting, directing
 from keri.core import coring
+
+
+async def incept(app, hab):
+    directing.runController([Incepter(hby=app.hby, hab=hab)])
 
 
 class Incepter(doing.DoDoer):

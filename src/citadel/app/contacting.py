@@ -5,6 +5,8 @@ import base64
 import flet as ft
 import qrcode
 from flet_core import padding
+from keri.db import basing
+from keri.help import helping
 
 
 class Contacts(ft.Column):
@@ -102,20 +104,18 @@ class CreateContactPanel(ft.UserControl):
         self.page.snack_bar.open = True
         await self.page.update_async()
 
-        oobis = self.app.hby.oobis()
-        operations = self.app.hby.operations()
-        op = oobis.resolve(oobi=self.oobi.value, alias=self.alias.value)
+        obr = basing.OobiRecord(date=helping.nowIso8601())
+        obr.oobialias = self.alias.value
 
-        while not op["done"]:
-            op = operations.get(op["name"])
+        self.app.hby.db.oobis.put(keys=(self.oobi.value,), val=obr)
+        while not self.app.hby.db.roobi.get(keys=(self.oobi.value,)):
             await asyncio.sleep(1)
 
-        self.page.snack_bar = ft.SnackBar(ft.Text(f"Contact {self.alias.value} created!"), duration=2000)
-        self.page.snack_bar.open = True
-        await self.page.update_async()
+        await self.app.snack(f"Contact {self.alias.value} created!")
 
         self.reset()
-        self.app.showContacts()
+        self.app.reloadWitnessesAndMembers()
+        await self.app.showContacts()
 
     def loadWitnesses(self):
         return [ft.dropdown.Option(wit['id']) for wit in self.app.witnesses]

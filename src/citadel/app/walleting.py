@@ -1,6 +1,9 @@
 from time import sleep
 
 import flet as ft
+from keri.vdr import credentialing
+
+from citadel.core import agenting
 from citadel.tasks import oobiing
 from keri import kering
 from keri.app import configing, habbing, keeping, connecting, directing
@@ -20,7 +23,8 @@ class CitadelApp:
 
     def __init__(self, page):
         self.page = page
-        self.hby = None
+        self.agent = None
+        self.notifier = None
         self.rail = None
         self.temp = False
         self.tier = Tiers.low
@@ -145,25 +149,25 @@ class CitadelApp:
     async def switchPane(self, idx):
         match idx:
             case 0:
-                if self.hby is None:
+                if self.agent is None:
                     await self.open_dlg_modal(idx)
                     return
 
                 await self.showIdentifiers()
             case 1:
-                if self.hby is None:
+                if self.agent is None:
                     await self.open_dlg_modal(idx)
                     return
 
                 self.showWitnesses()
             case 2:
-                if self.hby is None:
+                if self.agent is None:
                     await self.open_dlg_modal(idx)
                     return
 
                 await self.showCredentials()
             case 3:
-                if self.hby is None:
+                if self.agent is None:
                     await self.open_dlg_modal(idx)
                     return
 
@@ -175,15 +179,20 @@ class CitadelApp:
     async def showNotifications(self, e=None):
         self.main.controls.pop()
         self.main.controls.append(self.notifications)
+        self.page.floating_action_button = None
+
         await self.page.update_async()
         self.reloadNotes()
-        self.notifications.setNotes(self.notes)
+        await self.notifications.setNotes(self.notes)
         self.rail.selected_index = None
 
     def reloadNotes(self):
-        notifications = self.hby.notifications()
-        res = notifications.list()
-        self.notes = res["notes"]
+        if self.notifier is None:
+            return
+
+        count = self.notifier.getNoteCnt()
+        self.notes = self.notifier.getNotes(start=0, end=count)
+
         if len(self.notes) == 0:
             self.notificationsButton.icon = ft.icons.NOTIFICATIONS_NONE_SHARP
         else:
@@ -201,7 +210,7 @@ class CitadelApp:
         await self.page.update_async()
 
     async def refreshIdentifiers(self):
-        aids = self.hby.habs.values()
+        aids = self.agent.hby.habs.values()
 
         await self.identifiers.setIdentifiers(aids)
         await self.identifiers.update_async()
@@ -228,23 +237,23 @@ class CitadelApp:
         await self.page.update_async()
 
     async def refreshContacts(self):
-        org = connecting.Organizer(hby=self.hby)
+        org = connecting.Organizer(hby=self.agent.hby)
         contacts = []
         for c in org.list():
             aid = c['id']
-            accepted = [saider.qb64 for saider in self.hby.db.chas.get(keys=(aid,))]
-            received = [saider.qb64 for saider in self.hby.db.reps.get(keys=(aid,))]
+            accepted = [saider.qb64 for saider in self.agent.hby.db.chas.get(keys=(aid,))]
+            received = [saider.qb64 for saider in self.agent.hby.db.reps.get(keys=(aid,))]
             valid = set(accepted) & set(received)
 
             challenges = []
             for said in valid:
-                exn = self.hby.db.exns.get(keys=(said,))
+                exn = self.agent.hby.db.exns.get(keys=(said,))
                 challenges.append(dict(dt=exn.ked['dt'], words=exn.ked['a']['words']))
 
             c["challenges"] = challenges
 
             wellKnowns = []
-            wkans = self.hby.db.wkas.get(keys=(aid,))
+            wkans = self.agent.hby.db.wkas.get(keys=(aid,))
             for wkan in wkans:
                 wellKnowns.append(dict(url=wkan.url, dt=wkan.dt))
 
@@ -264,7 +273,6 @@ class CitadelApp:
         await self.main.update_async()
         self.page.floating_action_button = None
         await self.page.update_async()
-
 
     async def cancel_connect(self, e):
         self.connectDialog.open = False
@@ -342,11 +350,12 @@ class CitadelApp:
                 await self.snack(f"Invalid Username or Passcode, please try again...")
                 return
 
-        self.hby = hby
+        rgy = credentialing.Regery(hby=hby, name=hby.name, base=self.base, temp=self.temp)
+        self.agent = agenting.runController(app=self, hby=hby, rgy=rgy)
         self.page.appbar.actions.remove(self.disconnected)
         self.page.appbar.actions.insert(0, self.connected)
-        self.notifications.client = self.hby
-        # self.reloadNotes()
+
+        self.reloadNotes()
         self.reloadWitnessesAndMembers()
 
         if self.connectDialog.data is not None:
@@ -355,7 +364,7 @@ class CitadelApp:
         await self.page.update_async()
 
     def reloadWitnessesAndMembers(self):
-        org = connecting.Organizer(hby=self.hby)
+        org = connecting.Organizer(hby=self.agent.hby)
 
         self.witnesses.clear()
         self.members.clear()
@@ -428,13 +437,16 @@ class CitadelApp:
         self.page.snack_bar.open = True
         await self.page.update_async()
 
+    @property
+    def hby(self):
+        return self.agent.hby if self.agent is not None else None
+
 
 class Notifications(ft.Container):
 
     def __init__(self, app):
         self.app = app
         self.page = app.page
-        self._client = None
         self.selected = None
 
         self.title = ft.Text("Notifications", size=32)
@@ -447,15 +459,7 @@ class Notifications(ft.Container):
             ), expand=True)
         super(Notifications, self).__init__(expand=True, alignment=ft.alignment.top_left)
 
-    @property
-    def client(self):
-        return self._client
-
-    @client.setter
-    def client(self, client):
-        self._client = client
-
-    def setNotes(self, notes):
+    async def setNotes(self, notes):
         self.list.controls.clear()
         for note in notes:
             attrs = note['a']
@@ -504,18 +508,16 @@ class Notifications(ft.Container):
                     )
                     self.list.controls.append(tile)
 
-        self.update_async()
+        await self.update_async()
 
     def view(self, e=None):
-        groups = self.client.groups()
-
         note = e.control.data
         self.selected = note
 
         attrs = note['a']
         said = attrs['d']
 
-        res = groups.get_request(said=said)
+        res = None
         if not res:
             return
 
@@ -662,7 +664,7 @@ class Notifications(ft.Container):
     async def dismiss(self, e):
         self.page.dialog.open = False
         self.app.reloadNotes()
-        self.setNotes(self.app.notes)
+        await self.setNotes(self.app.notes)
 
         self.title.value = "Notifications"
         self.card.content = self.list
