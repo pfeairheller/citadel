@@ -25,16 +25,16 @@ class Watchers(ft.Column):
             ft.Row([self.card])
         ], expand=True, scroll=ft.ScrollMode.ALWAYS)
 
-    def addWatcher(self, _):
+    async def addWatcher(self, _):
         self.title.value = "Create Watcher"
         self.app.page.floating_action_button = None
 
         watcherPanel = CreateWatcherPanel(self.app)
         self.card.content = watcherPanel
-        self.card.update()
-        self.app.page.update()
+        await self.card.update_async()
+        await self.app.page.update_async()
 
-        watcherPanel.update()
+        await watcherPanel.update_async()
 
     def setWatchers(self, watchers):
         self.title.value = "Watchers"
@@ -60,19 +60,19 @@ class Watchers(ft.Column):
             )
             self.list.controls.append(tile)
 
-        self.update()
+        self.update_async()
 
-    def viewWatcher(self, e):
+    async def viewWatcher(self, e):
         name = e.control.data
         identifiers = self.app.hby.identifiers()
         aid = identifiers.get(name=name)
 
         viewPanel = ViewWatcherPanel(self.app, aid)
         self.card.content = viewPanel
-        self.card.update()
-        self.app.page.update()
+        await self.card.update_async()
+        await self.app.page.update_async()
 
-        viewPanel.update()
+        await viewPanel.update_async()
 
     def build(self):
         return ft.Column([
@@ -90,7 +90,7 @@ class CreateWatcherPanel(ft.UserControl):
         self.alias = ft.TextField(label="Alias", border_color=ft.colors.BLUE_400)
         self.oobi = ft.TextField(label="OOBI", width=400, border_color=ft.colors.BLUE_400)
 
-    def createWatcher(self, _):
+    async def createWatcher(self, _):
 
         if self.alias.value == "":
             return
@@ -100,7 +100,7 @@ class CreateWatcherPanel(ft.UserControl):
 
         self.page.snack_bar = ft.SnackBar(ft.Text(f"Creating watcher {self.alias.value}..."), duration=5000)
         self.page.snack_bar.open = True
-        self.page.update()
+        await self.page.update_async()
 
         oobis = self.app.hby.oobis()
         operations = self.app.hby.operations()
@@ -112,7 +112,7 @@ class CreateWatcherPanel(ft.UserControl):
 
         self.page.snack_bar = ft.SnackBar(ft.Text(f"Watcher {self.alias.value} created!"), duration=2000)
         self.page.snack_bar.open = True
-        self.page.update()
+        await self.page.update_async()
 
         self.reset()
         self.app.showWatchers()
@@ -179,12 +179,12 @@ class ViewWatcherPanel(ft.UserControl):
         oobis = self.app.hby.oobis()
         self.oobiTabs = ft.Column()
 
-        def copy(e):
+        async def copy(e):
             self.app.page.set_clipboard(e.control.data)
 
             self.page.snack_bar = ft.SnackBar(ft.Text(f"OOBI URL Copied!"), duration=2000)
             self.page.snack_bar.open = True
-            self.page.update()
+            await self.page.update_async()
 
         for role in ('agent', 'mailbox', 'witness'):
             res = oobis.get(self.aid['name'], role=role)

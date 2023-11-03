@@ -14,21 +14,21 @@ from citadel.app.walleting import CitadelApp
 
 d = "Runs Citadel.\n"
 parser = argparse.ArgumentParser(description=d)
-parser.set_defaults(handler=lambda args: launch(args))
 
-
-def launch(args):
+async def launch(args):
     help.ogler.level = logging.CRITICAL
     help.ogler.reopen(name="wallet", temp=True, clear=True)
 
-    def main(page: ft.Page):
+    async def main(page: ft.Page):
         page.fonts = {
             "SourceCodePro": "/source_code_pro_static/SourceCodePro-Regular.ttf"
         }
 
         app = CitadelApp(page)
-        page.add(
+        await page.add_async(
             app.build()
         )
 
-    ft.app(target=main, assets_dir="/Users/pfeairheller/git_root/citadel/assets")
+    await ft.app_async(target=main, assets_dir="/Users/pfeairheller/git_root/citadel/assets")
+
+parser.set_defaults(handler=launch)

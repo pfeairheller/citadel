@@ -1,11 +1,12 @@
+import asyncio
 import io
 import base64
-from time import sleep
 
 import flet as ft
 import qrcode
 from flet_core import padding
-from keri.core import coring
+from keri.db import basing
+from keri.help import helping
 
 
 class Contacts(ft.Column):
@@ -26,18 +27,18 @@ class Contacts(ft.Column):
             ft.Row([self.card])
         ], expand=True, scroll=ft.ScrollMode.ALWAYS)
 
-    def addContact(self, _):
+    async def addContact(self, _):
         self.title.value = "Create Contact"
         self.app.page.floating_action_button = None
 
         contactPanel = CreateContactPanel(self.app)
         self.card.content = contactPanel
-        self.card.update()
-        self.app.page.update()
+        await self.card.update_async()
+        await self.app.page.update_async()
 
-        contactPanel.update()
+        await contactPanel.update_async()
 
-    def setContacts(self, contacts):
+    async def setContacts(self, contacts):
         self.title.value = "Contacts"
         self.card.content = self.list
         self.list.controls.clear()
@@ -61,19 +62,19 @@ class Contacts(ft.Column):
             )
             self.list.controls.append(tile)
 
-        self.update()
+        await self.update_async()
 
-    def viewContact(self, e):
+    async def viewContact(self, e):
         name = e.control.data
         identifiers = self.app.hby.identifiers()
         aid = identifiers.get(name=name)
 
         viewPanel = ViewContactPanel(self.app, aid)
         self.card.content = viewPanel
-        self.card.update()
-        self.app.page.update()
+        await self.card.update_async()
+        await self.app.page.update_async()
 
-        viewPanel.update()
+        await viewPanel.update_async()
 
     def build(self):
         return ft.Column([
@@ -91,7 +92,7 @@ class CreateContactPanel(ft.UserControl):
         self.alias = ft.TextField(label="Alias", border_color=ft.colors.BLUE_400)
         self.oobi = ft.TextField(label="OOBI", width=400, border_color=ft.colors.BLUE_400)
 
-    def createContact(self, _):
+    async def createContact(self, _):
 
         if self.alias.value == "":
             return
@@ -101,29 +102,27 @@ class CreateContactPanel(ft.UserControl):
 
         self.page.snack_bar = ft.SnackBar(ft.Text(f"Creating contact {self.alias.value}..."), duration=5000)
         self.page.snack_bar.open = True
-        self.page.update()
+        await self.page.update_async()
 
-        oobis = self.app.hby.oobis()
-        operations = self.app.hby.operations()
-        op = oobis.resolve(oobi=self.oobi.value, alias=self.alias.value)
+        obr = basing.OobiRecord(date=helping.nowIso8601())
+        obr.oobialias = self.alias.value
 
-        while not op["done"]:
-            op = operations.get(op["name"])
-            sleep(1)
+        self.app.hby.db.oobis.put(keys=(self.oobi.value,), val=obr)
+        while not self.app.hby.db.roobi.get(keys=(self.oobi.value,)):
+            await asyncio.sleep(1)
 
-        self.page.snack_bar = ft.SnackBar(ft.Text(f"Contact {self.alias.value} created!"), duration=2000)
-        self.page.snack_bar.open = True
-        self.page.update()
+        await self.app.snack(f"Contact {self.alias.value} created!")
 
         self.reset()
-        self.app.showContacts()
+        self.app.reloadWitnessesAndMembers()
+        await self.app.showContacts()
 
     def loadWitnesses(self):
         return [ft.dropdown.Option(wit['id']) for wit in self.app.witnesses]
 
-    def cancel(self, _):
+    async def cancel(self, _):
         self.reset()
-        self.app.showContacts()
+        await self.app.showContacts()
 
     def reset(self):
         self.alias.value = ""
@@ -180,12 +179,12 @@ class ViewContactPanel(ft.UserControl):
         oobis = self.app.hby.oobis()
         self.oobiTabs = ft.Column()
 
-        def copy(e):
+        async def copy(e):
             self.app.page.set_clipboard(e.control.data)
 
             self.page.snack_bar = ft.SnackBar(ft.Text(f"OOBI URL Copied!"), duration=2000)
             self.page.snack_bar.open = True
-            self.page.update()
+            await self.page.update_async()
 
         for role in ('agent', 'mailbox', 'witness'):
             res = oobis.get(self.aid['name'], role=role)

@@ -32,15 +32,15 @@ class SettingsPanel(ft.UserControl):
         self.app = app
         super(SettingsPanel, self).__init__()
 
-        def theme_changed(e):
+        async def theme_changed(e):
             self.app.page.theme_mode = (
                 ft.ThemeMode.DARK
                 if self.app.page.theme_mode == ft.ThemeMode.LIGHT
                 else ft.ThemeMode.LIGHT
             )
             self.themeSwitch.label = "Light theme" if self.app.page.theme_mode == ft.ThemeMode.LIGHT else "Dark theme"
-            self.themeSwitch.update()
-            self.app.page.update()
+            await self.themeSwitch.update_async()
+            await self.app.page.update_async()
 
         self.themeSwitch = ft.Switch(label="Dark Theme", value=False, on_change=theme_changed,
                                      label_position=ft.LabelPosition.LEFT)
@@ -69,7 +69,7 @@ class SettingsPanel(ft.UserControl):
         def algo_changed(e):
             self.app.algo = self.algoGroup.value
             self.keyTypePanel.content = self.salty if self.app.algo == "salty" else None
-            self.keyTypePanel.update()
+            self.keyTypePanel.update_async()
 
         self.algoGroup = ft.RadioGroup(content=ft.Row([
             ft.Radio(value="salty", label="Salty", fill_color=ft.colors.RED_400),
@@ -82,10 +82,10 @@ class SettingsPanel(ft.UserControl):
         self.salt = ft.TextField(label="Key Salt", value=self.app.salt, password=True, can_reveal_password=True, width=300,
                                  border_color=ft.colors.RED_400, on_change=salt_changed)
 
-        def resalt(_):
+        async def resalt(_):
             self.app.salt = coring.randomNonce()[2:23]
             self.salt.value = self.app.salt
-            self.salt.update()
+            await self.salt.update_async()
 
         self.salty = ft.Column([
             ft.Row([
