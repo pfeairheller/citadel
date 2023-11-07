@@ -11,6 +11,7 @@ from keri.app.keeping import Algos
 from keri.core import eventing, coring
 from keri.core.coring import Tiers
 from citadel.app import identifying, contacting, setting
+from citadel.app.colours import Brand
 
 SALT = "0ACDEyMzQ1Njc4OWxtbm9dEf"
 CONFIG_FILE = 'demo-witness-oobis-schema'
@@ -55,15 +56,16 @@ class CitadelApp:
         self.connectDialog = ft.AlertDialog(
             modal=True,
             title=ft.Text("Open Wallet"),
-            content=column,
+            content=ft.Container(content=column,),
             actions=[
-                ft.TextButton("Open", on_click=self.connect),
-                ft.TextButton("Cancel", on_click=self.cancel_connect),
+                ft.ElevatedButton("Open", on_click=self.connect,
+                                  color=ft.colors.WHITE, bgcolor=Brand.SECONDARY),
+                ft.ElevatedButton(
+                    "Cancel", on_click=self.cancel_connect, color=Brand.BATTLESHIP_GRAY,),
             ],
             actions_alignment=ft.MainAxisAlignment.CENTER,
-
-
         )
+
         self.inceptionData = ft.Text(value="", tooltip="Inception Data", max_lines=10, size=12,
                                      overflow=ft.TextOverflow.ELLIPSIS, weight=ft.FontWeight.BOLD,
                                      font_family="SourceCodePro", width=300)
@@ -78,8 +80,10 @@ class CitadelApp:
                 self.passcode,
             ]),
             actions=[
-                ft.TextButton("Create", on_click=self.generateHby),
-                ft.TextButton("Cancel", on_click=self.closeInitialize),
+                ft.ElevatedButton("Create", on_click=self.generateHby,
+                                  color=ft.colors.WHITE, bgcolor=Brand.SECONDARY),
+                ft.ElevatedButton(
+                    "Cancel", on_click=self.closeInitialize, color=Brand.BATTLESHIP_GRAY,),
             ],
             actions_alignment=ft.MainAxisAlignment.CENTER,
         )
@@ -95,9 +99,10 @@ class CitadelApp:
         self.disconnected = ft.IconButton(ft.icons.LINK_OFF_SHARP, icon_color="red", tooltip="Disconnected",
                                           on_click=self.open_dlg_modal)
         self.connected = ft.IconButton(ft.icons.LINK_SHARP,
-                                       icon_color="#51dac5", tooltip="Connected", on_click=self.open_dlg_modal)
+                                       icon_color=Brand.SECONDARY, tooltip="Connected", on_click=self.open_dlg_modal)
 
-        self.notificationsButton = ft.IconButton(ft.icons.NOTIFICATIONS_NONE_SHARP, on_click=self.showNotifications)
+        self.notificationsButton = ft.IconButton(
+            ft.icons.NOTIFICATIONS_NONE_SHARP, on_click=self.showNotifications)
         page.appbar = ft.AppBar(
             leading=ft.Container(ft.Image(src="gleif-logo-new.svg", width=40),
                                  padding=ft.padding.only(left=10)),
@@ -110,8 +115,10 @@ class CitadelApp:
                 self.notificationsButton,
                 ft.PopupMenuButton(
                     items=[
-                        ft.PopupMenuItem(text="Open", on_click=self.open_dlg_modal),
-                        ft.PopupMenuItem(text="Initialize", on_click=self.initialize),
+                        ft.PopupMenuItem(
+                            text="Open", on_click=self.open_dlg_modal),
+                        ft.PopupMenuItem(text="Initialize",
+                                         on_click=self.initialize),
                         ft.PopupMenuItem(text="Exit", on_click=self.exitApp),
                     ]
                 ),
@@ -205,7 +212,7 @@ class CitadelApp:
         await self.main.update_async()
         await self.refreshIdentifiers()
         self.page.floating_action_button = ft.FloatingActionButton(
-            icon=ft.icons.ADD, on_click=self.identifiers.add_identifier, bgcolor="#51dac5"
+            icon=ft.icons.ADD, on_click=self.identifiers.add_identifier, bgcolor=Brand.SECONDARY
         )
         await self.page.update_async()
 
@@ -232,7 +239,7 @@ class CitadelApp:
         await self.main.update_async()
         await self.refreshContacts()
         self.page.floating_action_button = ft.FloatingActionButton(
-            icon=ft.icons.ADD, on_click=self.contacts.addContact, bgcolor="#51dac5"
+            icon=ft.icons.ADD, on_click=self.contacts.addContact, bgcolor=Brand.SECONDARY
         )
         await self.page.update_async()
 
@@ -241,14 +248,17 @@ class CitadelApp:
         contacts = []
         for c in org.list():
             aid = c['id']
-            accepted = [saider.qb64 for saider in self.agent.hby.db.chas.get(keys=(aid,))]
-            received = [saider.qb64 for saider in self.agent.hby.db.reps.get(keys=(aid,))]
+            accepted = [
+                saider.qb64 for saider in self.agent.hby.db.chas.get(keys=(aid,))]
+            received = [
+                saider.qb64 for saider in self.agent.hby.db.reps.get(keys=(aid,))]
             valid = set(accepted) & set(received)
 
             challenges = []
             for said in valid:
                 exn = self.agent.hby.db.exns.get(keys=(said,))
-                challenges.append(dict(dt=exn.ked['dt'], words=exn.ked['a']['words']))
+                challenges.append(
+                    dict(dt=exn.ked['dt'], words=exn.ked['a']['words']))
 
             c["challenges"] = challenges
 
@@ -344,13 +354,15 @@ class CitadelApp:
                 if bran:
                     bran = bran.replace("-", "")
 
-                hby = habbing.Habery(name=self.username.value, bran=bran, cf=cf, free=True)
+                hby = habbing.Habery(
+                    name=self.username.value, bran=bran, cf=cf, free=True)
                 break
             except (kering.AuthError, ValueError):
                 await self.snack(f"Invalid Username or Passcode, please try again...")
                 return
 
-        rgy = credentialing.Regery(hby=hby, name=hby.name, base=self.base, temp=self.temp)
+        rgy = credentialing.Regery(
+            hby=hby, name=hby.name, base=self.base, temp=self.temp)
         self.agent = agenting.runController(app=self, hby=hby, rgy=rgy)
         self.page.appbar.actions.remove(self.disconnected)
         self.page.appbar.actions.insert(0, self.connected)
@@ -391,7 +403,8 @@ class CitadelApp:
                 ),
                 ft.NavigationRailDestination(
                     icon_content=ft.Icon(ft.icons.FRONT_HAND_ROUNDED),
-                    selected_icon_content=ft.Icon(ft.icons.FRONT_HAND_OUTLINED),
+                    selected_icon_content=ft.Icon(
+                        ft.icons.FRONT_HAND_OUTLINED),
                     label="Witnesses",
                 ),
                 ft.NavigationRailDestination(
@@ -457,7 +470,8 @@ class Notifications(ft.Container):
                 padding=ft.padding.symmetric(vertical=10, horizontal=5),
                 alignment=ft.alignment.top_left, expand=True
             ), expand=True)
-        super(Notifications, self).__init__(expand=True, alignment=ft.alignment.top_left)
+        super(Notifications, self).__init__(
+            expand=True, alignment=ft.alignment.top_left)
 
     async def setNotes(self, notes):
         self.list.controls.clear()
@@ -473,8 +487,10 @@ class Notifications(ft.Container):
                             tooltip=None,
                             icon=ft.icons.MORE_VERT,
                             items=[
-                                ft.PopupMenuItem(text="View", icon=ft.icons.PAGEVIEW, data=note, on_click=self.view),
-                                ft.PopupMenuItem(text="Delete", icon=ft.icons.DELETE_FOREVER),
+                                ft.PopupMenuItem(
+                                    text="View", icon=ft.icons.PAGEVIEW, data=note, on_click=self.view),
+                                ft.PopupMenuItem(
+                                    text="Delete", icon=ft.icons.DELETE_FOREVER),
                             ],
                         ),
                     )
@@ -482,13 +498,16 @@ class Notifications(ft.Container):
                 case "/multisig/vcp":
                     tile = ft.ListTile(
                         leading=ft.Icon(ft.icons.BADGE_ROUNDED),
-                        title=ft.Text("Group Credential Registry Inception Request"),
+                        title=ft.Text(
+                            "Group Credential Registry Inception Request"),
                         trailing=ft.PopupMenuButton(
                             tooltip=None,
                             icon=ft.icons.MORE_VERT,
                             items=[
-                                ft.PopupMenuItem(text="View", icon=ft.icons.PAGEVIEW, data=note, on_click=self.view),
-                                ft.PopupMenuItem(text="Delete", icon=ft.icons.DELETE_FOREVER),
+                                ft.PopupMenuItem(
+                                    text="View", icon=ft.icons.PAGEVIEW, data=note, on_click=self.view),
+                                ft.PopupMenuItem(
+                                    text="Delete", icon=ft.icons.DELETE_FOREVER),
                             ],
                         ),
                     )
@@ -501,8 +520,10 @@ class Notifications(ft.Container):
                             tooltip=None,
                             icon=ft.icons.MORE_VERT,
                             items=[
-                                ft.PopupMenuItem(text="View", icon=ft.icons.PAGEVIEW, data=note, on_click=self.viewIss),
-                                ft.PopupMenuItem(text="Delete", icon=ft.icons.DELETE_FOREVER),
+                                ft.PopupMenuItem(
+                                    text="View", icon=ft.icons.PAGEVIEW, data=note, on_click=self.viewIss),
+                                ft.PopupMenuItem(
+                                    text="Delete", icon=ft.icons.DELETE_FOREVER),
                             ],
                         ),
                     )
@@ -542,7 +563,8 @@ class Notifications(ft.Container):
                 ]),
                 ft.Row(),
                 ft.Row([
-                    ft.TextButton("Approve", on_click=self.approveVcp, data=req),
+                    ft.TextButton(
+                        "Approve", on_click=self.approveVcp, data=req),
                     ft.TextButton("Reject"),
                     ft.TextButton("Cancel")
                 ])
@@ -600,7 +622,8 @@ class Notifications(ft.Container):
                 ]),
                 data,
                 ft.Row([
-                    ft.TextButton("Approve", on_click=self.approveVcp, data=req),
+                    ft.TextButton(
+                        "Approve", on_click=self.approveVcp, data=req),
                     ft.TextButton("Reject"),
                     ft.TextButton("Cancel")
                 ])
@@ -623,14 +646,17 @@ class Notifications(ft.Container):
         keeper = self.client.manager.get(aid=ghab)
         sigs = keeper.sign(ser=iserder.raw)
 
-        op = registries.create_from_events(ghab, "vLEI", vcp=vcp.ked, ixn=iserder.ked, sigs=sigs)
+        op = registries.create_from_events(
+            ghab, "vLEI", vcp=vcp.ked, ixn=iserder.ked, sigs=sigs)
 
         embeds = dict(
             vcp=vcp.raw,
-            anc=eventing.messagize(serder=iserder, sigers=[coring.Siger(qb64=sig) for sig in sigs])
+            anc=eventing.messagize(serder=iserder, sigers=[
+                                   coring.Siger(qb64=sig) for sig in sigs])
         )
 
-        recp = ["EKYLUMmNPZeEs77Zvclf0bSN5IN-mLfLpx2ySb-HDlk4", "EJccSRTfXYF6wrUVuenAIHzwcx3hJugeiJsEKmndi5q1"]
+        recp = ["EKYLUMmNPZeEs77Zvclf0bSN5IN-mLfLpx2ySb-HDlk4",
+                "EJccSRTfXYF6wrUVuenAIHzwcx3hJugeiJsEKmndi5q1"]
         exchanges.send("multisig3", "multisig", sender=ghab['group']['mhab'], route="/multisig/vcp",
                        payload=dict(gid=ghab["prefix"], usage="Issue vLEIs"),
                        embeds=embeds, recipients=recp)

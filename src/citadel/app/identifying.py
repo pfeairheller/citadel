@@ -4,12 +4,14 @@ from urllib.parse import urlparse, urljoin
 
 import flet as ft
 import qrcode
-from flet_core import padding
+from flet_core import padding, FontWeight
 from keri import kering
 from keri.app import habbing
 from keri.app.keeping import Algos
 from keri.core import coring
 from keri.db import dbing
+
+from citadel.app.colours import Brand
 
 
 class Identifiers(ft.Column):
@@ -21,7 +23,7 @@ class Identifiers(ft.Column):
         self.list = ft.Column([], spacing=0, expand=True)
         self.card = ft.Container(
             content=self.list,
-            padding=padding.only(left=10, top=15), expand=True,
+            padding=padding.only(top=15), expand=True,
             alignment=ft.alignment.top_left
         )
 
@@ -68,13 +70,16 @@ class Identifiers(ft.Column):
                     items=[
                         ft.PopupMenuItem(text="View", icon=ft.icons.PAGEVIEW, on_click=self.viewIdentifier,
                                          data=hab),
-                        ft.PopupMenuItem(text="Delete", icon=ft.icons.DELETE_FOREVER),
+                        ft.PopupMenuItem(
+                            text="Delete", icon=ft.icons.DELETE_FOREVER),
                     ],
                 ),
                 on_click=self.viewIdentifier,
                 data=hab,
             )
-            self.list.controls.append(tile)
+            bg = Brand.GRAY_LIGHTER if len(
+                self.list.controls) % 2 == 0 else ft.colors.WHITE
+            self.list.controls.append(ft.Container(content=tile, bgcolor=bg))
 
         await self.update_async()
 
@@ -104,17 +109,20 @@ class ViewIdentifierPanel(ft.UserControl):
         if isinstance(hab, habbing.GroupHab):
             self.typePanel = ft.Row([
                 ft.Text("Key Type:", weight=ft.FontWeight.BOLD, width=175),
-                ft.Text("Group Multisig Identifier", weight=ft.FontWeight.BOLD),
+                ft.Text("Group Multisig Identifier",
+                        weight=ft.FontWeight.BOLD),
             ])
         elif hab.algo == Algos.salty:
             self.typePanel = ft.Row([
                 ft.Text("Key Type:", weight=ft.FontWeight.BOLD, width=175),
-                ft.Text("Hierarchical Key Chain Identifier", weight=ft.FontWeight.BOLD),
+                ft.Text("Hierarchical Key Chain Identifier",
+                        weight=ft.FontWeight.BOLD),
             ])
         elif hab.algo == Algos.randy:
             self.typePanel = ft.Row([
                 ft.Text("Key Type:", weight=ft.FontWeight.BOLD, width=175),
-                ft.Text("Random Key Generation Identifier", weight=ft.FontWeight.BOLD),
+                ft.Text("Random Key Generation Identifier",
+                        weight=ft.FontWeight.BOLD),
             ])
 
         self.publicKeys = ft.Column()
@@ -129,7 +137,8 @@ class ViewIdentifierPanel(ft.UserControl):
         async def copy(e):
             await self.app.page.set_clipboard_async(e.control.data)
 
-            self.page.snack_bar = ft.SnackBar(ft.Text(f"OOBI URL Copied!"), duration=2000)
+            self.page.snack_bar = ft.SnackBar(
+                ft.Text(f"OOBI URL Copied!"), duration=2000)
             self.page.snack_bar.open = True
             await self.page.update_async()
 
@@ -149,7 +158,8 @@ class ViewIdentifierPanel(ft.UserControl):
                     ft.Text(role.capitalize(), weight=ft.FontWeight.BOLD),
                 ]),
                 ft.Row([
-                    ft.Image(src_base64=base64.b64encode(f.read()).decode('utf-8'), width=175)
+                    ft.Image(src_base64=base64.b64encode(
+                        f.read()).decode('utf-8'), width=175)
                 ]),
                 ft.Row([
                     ft.Text(value=oobi[0], tooltip=oobi[0], max_lines=3, size=12, overflow=ft.TextOverflow.ELLIPSIS,
@@ -170,9 +180,11 @@ class ViewIdentifierPanel(ft.UserControl):
         dgkey = dbing.dgKey(ser.preb, ser.saidb)
         wigs = self.hab.db.getWigs(dgkey)
         return ft.Container(ft.Column([
-            ft.Container(content=ft.Divider(color="#51dac5"), padding=ft.padding.only(bottom=10)),
+            ft.Container(content=ft.Divider(color=Brand.SECONDARY),
+                         padding=ft.padding.only(bottom=10)),
             ft.Row([
-                ft.Text("Alias:", weight=ft.FontWeight.BOLD, width=175, size=14),
+                ft.Text("Alias:", weight=ft.FontWeight.BOLD,
+                        width=175, size=14),
                 ft.Text(self.hab.name, size=14, weight=ft.FontWeight.BOLD)
             ]),
             ft.Row([
@@ -180,15 +192,29 @@ class ViewIdentifierPanel(ft.UserControl):
                 ft.Text(self.hab.pre, font_family="SourceCodePro")
             ]),
             ft.Row([
-                ft.Text("Establishment Only", weight=ft.FontWeight.BOLD, width=168, size=14),
-                ft.Checkbox(value=True, fill_color="#51dac5", disabled=True)
-            ], visible=kever.estOnly),
-            ft.Row([
-                ft.Text("Sequence Number:", weight=ft.FontWeight.BOLD, width=175),
+                ft.Text("Sequence Number:",
+                        weight=ft.FontWeight.BOLD, width=175),
                 ft.Text(kever.sner.num)
             ]),
             self.typePanel,
-            ft.Container(content=ft.Divider(color="#51dac5"), padding=ft.padding.only(top=10, bottom=10)),
+            ft.Container(content=ft.Divider(color=Brand.SECONDARY),
+                         padding=ft.padding.only(top=10, bottom=10)),
+            ft.Column([
+                ft.Row([
+                    ft.Text("Establishment Only",
+                        weight=ft.FontWeight.BOLD, width=168, size=14),
+                    ft.Checkbox(value=True, fill_color=Brand.SECONDARY,
+                            disabled=True)], 
+                visible=kever.estOnly),
+                ft.Row([
+                    ft.Text("Do Not Delegate",
+                        weight=ft.FontWeight.BOLD, width=168, size=14),
+                    ft.Checkbox(value=True, fill_color=Brand.SECONDARY,
+                            disabled=True)], 
+                visible=kever.estOnly),
+            ]),
+            ft.Container(content=ft.Divider(color=Brand.SECONDARY),
+                         padding=ft.padding.only(top=10, bottom=10)),
             ft.Column([
                 ft.Row([
                     ft.Text("Witnesses:", weight=ft.FontWeight.BOLD, width=175),
@@ -206,17 +232,21 @@ class ViewIdentifierPanel(ft.UserControl):
                     ft.Text(kever.toader.num)
                 ]),
             ]),
-            ft.Container(content=ft.Divider(color="#51dac5"), padding=ft.padding.only(top=10, bottom=10)),
+            ft.Container(content=ft.Divider(color=Brand.SECONDARY),
+                         padding=ft.padding.only(top=10, bottom=10)),
             ft.Row([
                 ft.Text("Public Keys:", weight=ft.FontWeight.BOLD, width=175),
             ]),
-            ft.Container(content=self.publicKeys, padding=ft.padding.only(left=40)),
-            ft.Container(content=ft.Divider(color="#51dac5"), padding=ft.padding.only(top=10, bottom=10)),
+            ft.Container(content=self.publicKeys,
+                         padding=ft.padding.only(left=40)),
+            ft.Container(content=ft.Divider(color=Brand.SECONDARY),
+                         padding=ft.padding.only(top=10, bottom=10)),
             ft.Row([
                 ft.Text("OOBIs:", weight=ft.FontWeight.BOLD, width=175),
             ]),
             ft.Container(content=self.oobiTabs),
-            ft.Container(content=ft.Divider(color="#51dac5"), padding=ft.padding.only(top=10, bottom=10)),
+            ft.Container(content=ft.Divider(color=Brand.SECONDARY),
+                         padding=ft.padding.only(top=10, bottom=10)),
             ft.Row([
                 ft.TextButton("Close", on_click=self.close)
             ]),
@@ -227,24 +257,28 @@ class ViewIdentifierPanel(ft.UserControl):
         if role in (kering.Roles.witness,):  # Fetch URL OOBIs for all witnesses
             oobis = []
             for wit in self.hab.kever.wits:
-                urls = self.hab.fetchUrls(eid=wit, scheme=kering.Schemes.http) or self.hab.fetchUrls(eid=wit, scheme=kering.Schemes.https)
+                urls = self.hab.fetchUrls(eid=wit, scheme=kering.Schemes.http) or self.hab.fetchUrls(
+                    eid=wit, scheme=kering.Schemes.https)
                 if not urls:
                     return []
 
                 url = urls[kering.Schemes.http] if kering.Schemes.http in urls else urls[kering.Schemes.https]
                 up = urlparse(url)
-                oobis.append(urljoin(up.geturl(), f"/oobi/{self.hab.pre}/witness/{wit}"))
+                oobis.append(
+                    urljoin(up.geturl(), f"/oobi/{self.hab.pre}/witness/{wit}"))
             return oobis
 
         elif role in (kering.Roles.controller,):  # Fetch any controller URL OOBIs
             oobis = []
-            urls = self.hab.fetchUrls(eid=self.hab.pre, scheme=kering.Schemes.http) or self.hab.fetchUrls(eid=self.hab.pre, scheme=kering.Schemes.https)
+            urls = self.hab.fetchUrls(eid=self.hab.pre, scheme=kering.Schemes.http) or self.hab.fetchUrls(
+                eid=self.hab.pre, scheme=kering.Schemes.https)
             if not urls:
                 return []
 
             url = urls[kering.Schemes.http] if kering.Schemes.http in urls else urls[kering.Schemes.https]
             up = urlparse(url)
-            oobis.append(urljoin(up.geturl(), f"/oobi/{self.hab.pre}/controller"))
+            oobis.append(
+                urljoin(up.geturl(), f"/oobi/{self.hab.pre}/controller"))
             return oobis
 
         elif role in (kering.Roles.agent,):
@@ -257,7 +291,8 @@ class ViewIdentifierPanel(ft.UserControl):
             for eid, urls in roleUrls['agent'].items():
                 url = urls[kering.Schemes.http] if kering.Schemes.http in urls else urls[kering.Schemes.https]
                 up = urlparse(url)
-                oobis.append(urljoin(up.geturl(), f"/oobi/{self.hab.pre}/agent/{eid}"))
+                oobis.append(
+                    urljoin(up.geturl(), f"/oobi/{self.hab.pre}/agent/{eid}"))
 
             return oobis
 
@@ -272,21 +307,29 @@ class CreateIdentifierPanel(ft.UserControl):
         self.app = app
         super(CreateIdentifierPanel, self).__init__()
 
-        self.alias = ft.TextField(label="Alias", border_color="#51dac5")
-        self.eo = ft.Checkbox(label="Establishment only", value=False, fill_color="#51dac5")
+        self.alias = ft.TextField(
+            hint_text="a-memorable-description", border_color=Brand.SECONDARY)
+        self.eo = ft.Checkbox(label="Establishment Only", value=False,
+                              fill_color=ft.colors.WHITE, check_color=Brand.SECONDARY)
+        self.dnd = ft.Checkbox(label="Do Not Delegate", value=False,
+                               fill_color=ft.colors.WHITE, check_color=Brand.SECONDARY)
 
         salt = coring.randomNonce()[2:23]
         self.salt = ft.TextField(label="Key Salt", value=salt, password=True, can_reveal_password=True, width=300,
-                                 border_color="#51dac5")
-        self.keyCount = ft.TextField(label="Signing", width=100, value="1", border_color="#51dac5")
-        self.nkeyCount = ft.TextField(label="Rotation", width=100, value="1", border_color="#51dac5")
-        self.keySith = ft.TextField(label="Signing Threshold", width=200, value="1", border_color="#51dac5")
-        self.nkeySith = ft.TextField(label="Rotation Threshold", width=200, value="1", border_color="#51dac5")
-        self.toad = ft.TextField(label="Witness Threshold", width=150, value="0", border_color="#51dac5")
+                                 border_color=Brand.SECONDARY)
+        self.keyCount = ft.TextField(
+            label="Signing", width=100, value="1", border_color=Brand.SECONDARY)
+        self.nkeyCount = ft.TextField(
+            label="Rotation", width=100, value="1", border_color=Brand.SECONDARY)
+        self.keySith = ft.TextField(
+            label="Signing Threshold", width=200, value="1", border_color=Brand.SECONDARY)
+        self.nkeySith = ft.TextField(
+            label="Rotation Threshold", width=200, value="1", border_color=Brand.SECONDARY)
+        self.toad = ft.TextField(value="0", border_color=Brand.SECONDARY)
 
         self.signingList = ft.Column(width=550)
         self.signingDropdown = ft.Dropdown(options=[], width=420, text_size=12, height=50,
-                                           border_color="#51dac5",
+                                           border_color=Brand.SECONDARY,
                                            text_style=ft.TextStyle(font_family="SourceCodePro"))
         self.rotationList = ft.Column(width=550)
         self.rotationDropdown = ft.Dropdown(options=[], width=420, text_size=12, height=50,
@@ -294,7 +337,7 @@ class CreateIdentifierPanel(ft.UserControl):
                                             text_style=ft.TextStyle(font_family="SourceCodePro"))
         self.rotationAddButton = ft.IconButton(icon=ft.icons.ADD, tooltip="Add Member", on_click=self.addRotation,
                                                disabled=True)
-        self.rotSith = ft.TextField(label="Rotation Threshold", width=200, value="1", border_color="#51dac5",
+        self.rotSith = ft.TextField(label="Rotation Threshold", width=200, value="1", border_color=Brand.SECONDARY,
                                     disabled=True)
 
         async def resalt(_):
@@ -304,9 +347,10 @@ class CreateIdentifierPanel(ft.UserControl):
         self.salty = ft.Column([
             ft.Row([
                 self.salt,
-                ft.IconButton(icon=ft.icons.CHANGE_CIRCLE_OUTLINED, on_click=resalt, icon_color="#51dac5")
+                ft.IconButton(icon=ft.icons.CHANGE_CIRCLE_OUTLINED,
+                              on_click=resalt, icon_color=Brand.SECONDARY)
             ]),
-            ft.Text("Number of Keys / Threshold"),
+            ft.Text("Number of Keys / Threshold", weight=FontWeight.BOLD),
             ft.Row([
                 self.keyCount,
                 self.keySith
@@ -319,7 +363,7 @@ class CreateIdentifierPanel(ft.UserControl):
         ], spacing=20)
 
         self.randy = ft.Column([
-            ft.Text("Number of Keys / Threshold"),
+            ft.Text("Number of Keys / Threshold", weight=FontWeight.BOLD),
             ft.Row([
                 self.keyCount,
                 self.keySith
@@ -335,7 +379,8 @@ class CreateIdentifierPanel(ft.UserControl):
             self.signingList,
             ft.Row([
                 self.signingDropdown,
-                ft.IconButton(icon=ft.icons.ADD, tooltip="Add Member", on_click=self.addMember)
+                ft.IconButton(icon=ft.icons.ADD,
+                              tooltip="Add Member", on_click=self.addMember)
             ]),
             ft.Row([
                 self.keySith
@@ -356,11 +401,12 @@ class CreateIdentifierPanel(ft.UserControl):
 
         self.witnesses = self.loadWitnesses()
 
-        self.keyTypePanel = ft.Container(content=self.salty, padding=padding.only(left=50))
+        self.keyTypePanel = ft.Container(
+            content=self.salty, padding=padding.only(left=50))
         self.keyType = "salty"
 
         self.witnessDropdown = ft.Dropdown(options=self.witnesses, width=420, text_size=14,
-                                           border_color="#51dac5",
+                                           border_color=Brand.SECONDARY,
                                            text_style=ft.TextStyle(font_family="SourceCodePro"))
         self.witnessList = ft.Column(width=550)
 
@@ -394,7 +440,8 @@ class CreateIdentifierPanel(ft.UserControl):
             if option.key == self.witnessDropdown.value:
                 self.witnessDropdown.options.remove(option)
 
-        self.toad.value = str(self.recommendedThold(len(self.witnessList.controls)))
+        self.toad.value = str(self.recommendedThold(
+            len(self.witnessList.controls)))
         await self.toad.update_async()
 
         self.witnessDropdown.value = None
@@ -409,7 +456,8 @@ class CreateIdentifierPanel(ft.UserControl):
                 self.witnessDropdown.options.append(ft.dropdown.Option(aid))
                 break
 
-        self.toad.value = str(self.recommendedThold(len(self.witnessList.controls)))
+        self.toad.value = str(self.recommendedThold(
+            len(self.witnessList.controls)))
         await self.toad.update_async()
         await self.witnessDropdown.update_async()
         await self.witnessList.update_async()
@@ -441,7 +489,7 @@ class CreateIdentifierPanel(ft.UserControl):
         self.rotationAddButton.disabled = not e.control.value
         self.rotationList.controls.clear()
 
-        self.rotationDropdown.border_color = "#51dac5" if e.control.value \
+        self.rotationDropdown.border_color = Brand.SECONDARY if e.control.value \
             else ft.colors.with_opacity(0.25, ft.colors.GREY)
 
         await self.rotationList.update_async()
@@ -478,7 +526,8 @@ class CreateIdentifierPanel(ft.UserControl):
                 self.signingDropdown.options.append(ft.dropdown.Option(aid))
                 break
 
-        self.toad.value = str(self.recommendedThold(len(self.signingList.controls)))
+        self.toad.value = str(self.recommendedThold(
+            len(self.signingList.controls)))
         await self.toad.update_async()
         await self.signingDropdown.update_async()
         await self.signingList.update_async()
@@ -491,7 +540,8 @@ class CreateIdentifierPanel(ft.UserControl):
                 self.rotationDropdown.options.append(ft.dropdown.Option(aid))
                 break
 
-        self.toad.value = str(self.recommendedThold(len(self.rotationList.controls)))
+        self.toad.value = str(self.recommendedThold(
+            len(self.rotationList.controls)))
         await self.toad.update_async()
         await self.rotationDropdown.update_async()
         await self.rotationList.update_async()
@@ -506,7 +556,8 @@ class CreateIdentifierPanel(ft.UserControl):
 
         kwargs = dict(algo=self.keyType)
         if self.keyType == "salty":
-            kwargs['salt'] = coring.Salter(raw=self.salt.value.encode("utf-8")).qb64
+            kwargs['salt'] = coring.Salter(
+                raw=self.salt.value.encode("utf-8")).qb64
             kwargs['icount'] = int(self.keyCount.value)
             kwargs['isith'] = int(self.keySith.value)
             kwargs['ncount'] = int(self.nkeyCount.value)
@@ -540,11 +591,13 @@ class CreateIdentifierPanel(ft.UserControl):
             kwargs["rmids"] = rmids
 
         # TODO - Add delegator support here
+        # delpre
         delegator = False
 
         kwargs['wits'] = [c.data for c in self.witnessList.controls]
         kwargs['toad'] = self.toad.value
         kwargs['estOnly'] = self.eo.value
+        kwargs['DnD'] = self.dnd.value
 
         if self.keyType == "group":
             hab = self.app.hby.makeGroupHab(name=self.alias.value, **kwargs)
@@ -582,7 +635,10 @@ class CreateIdentifierPanel(ft.UserControl):
 
     def reset(self):
         self.alias.value = ""
-        self.keyTypePanel = ft.Container(content=self.salty, padding=padding.only(left=50))
+        self.eo.value = False
+        self.dnd.value = False
+        self.keyTypePanel = ft.Container(
+            content=self.salty, padding=padding.only(left=50))
         self.keyType = "salty"
         self.nkeySith.value = "1"
         self.keySith.value = "1"
@@ -614,36 +670,78 @@ class CreateIdentifierPanel(ft.UserControl):
         return ft.Container(
             content=ft.Column([
                 ft.Row([
-                    self.alias,
-                    self.eo
+                    ft.Column([
+                        ft.Row([
+                            ft.Text("Alias", weight=FontWeight.BOLD,),
+                        ]),
+                        ft.Row([
+                            self.alias,
+                        ]),
+                    ]),
                 ]),
+                ft.Container(content=ft.Divider(color=Brand.SECONDARY),),
+                ft.Row([
+                    ft.Column([
+                        ft.Row([
+                            ft.Text("Configuration options",
+                                    weight=FontWeight.BOLD,),
+                        ]),
+                        ft.Row([
+                            ft.Column([
+                                self.eo
+                            ]),
+                            ft.Column([
+                                self.dnd
+                            ]),
+                        ]),
+                    ]),
+                ]),
+                ft.Container(content=ft.Divider(color=Brand.SECONDARY),),
                 ft.Column([
-                    ft.Text("Select Key Type"),
+                    ft.Text("Select Key Type", weight=FontWeight.BOLD,),
                     ft.RadioGroup(content=ft.Row([
-                        ft.Radio(value="salty", label="Key Chain"),
-                        ft.Radio(value="randy", label="Random Key"),
-                        ft.Radio(value="group", label="Group Multisig")]), value="salty", on_change=self.keyTypeChanged)
+                        ft.Radio(value="salty", label="Key Chain",
+                                 fill_color=Brand.SECONDARY,),
+                        ft.Radio(value="randy", label="Random Key",
+                                 fill_color=Brand.SECONDARY,),
+                        ft.Radio(value="group", label="Group Multisig", fill_color=Brand.SECONDARY,)]), value="salty", on_change=self.keyTypeChanged)
                 ]),
                 self.keyTypePanel,
-                ft.Container(content=ft.Divider(color="#51dac5"), padding=ft.padding.only(top=10, bottom=2)),
+                ft.Container(content=ft.Divider(color=Brand.SECONDARY),),
                 ft.Column([
-                    ft.Text("Witnesses"),
+                    ft.Text("Witnesses", weight=FontWeight.BOLD,),
                     self.witnessList,
                     ft.Row([
                         self.witnessDropdown,
-                        ft.IconButton(icon=ft.icons.ADD, tooltip="Add Witness", on_click=self.addWitness)
+                        ft.IconButton(
+                            icon=ft.icons.ADD, tooltip="Add Witness", on_click=self.addWitness)
                     ]),
                     ft.Container(padding=ft.padding.only(top=3)),
                     ft.Row([
-                        ft.Text("Threshold of Acceptable Duplicity"),
-                        self.toad
-                    ])
+                        ft.Text("Threshold of Acceptable Duplicity",
+                                weight=FontWeight.BOLD),
+                    ]),
+                    ft.Row([
+                        self.toad,
+                    ]),
                 ]),
-                ft.Container(content=ft.Divider(color="#51dac5"), padding=ft.padding.only(top=10, bottom=10)),
+                ft.Container(content=ft.Divider(color=Brand.SECONDARY),),
+                ft.Column([
+                    ft.Text("Delegator", weight=FontWeight.BOLD,),
+                    self.witnessList,
+                    ft.Row([
+                        self.witnessDropdown,
+                        ft.IconButton(
+                            icon=ft.icons.ADD, tooltip="Add Delegator", on_click=self.addWitness)
+                    ]),
+                ]),
+                ft.Container(content=ft.Divider(color=Brand.SECONDARY),),
                 ft.Row([
-                    ft.TextButton("Create", on_click=self.createAid),
-                    ft.TextButton("Cancel", on_click=self.cancel)
-                ])
+                    ft.ElevatedButton(
+                        "Create", on_click=self.createAid, color=ft.colors.WHITE, bgcolor=Brand.SECONDARY,),
+                    ft.ElevatedButton(
+                        "Cancel", on_click=self.cancel, color=Brand.BATTLESHIP_GRAY,),
+                ]),
             ], spacing=35, scroll=ft.ScrollMode.AUTO),
             expand=True, alignment=ft.alignment.top_left,
             padding=padding.only(left=10, top=15))
