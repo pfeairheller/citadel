@@ -23,7 +23,10 @@ DEFAULT_PASSCODE = "DoB26Fj4x9LboAFWJra17O"
 class CitadelApp:
 
     def __init__(self, page):
+        self.initialized = False
+        self.connected = False
         self.page = page
+        self.page.theme = ft.Theme(font_family="SourceCodePro")
         self.agent = None
         self.notifier = None
         self.rail = None
@@ -52,6 +55,13 @@ class CitadelApp:
             ft.Text("Passcode"),
             self.passcode
         ])
+
+        self.connectHint = ft.Text(
+            "Click on the red link to connect",
+            italic=True, color="red",
+            text_align=ft.TextAlign.CENTER,
+            expand=True, size=14
+        )
 
         self.connectDialog = ft.AlertDialog(
             modal=True,
@@ -138,6 +148,8 @@ class CitadelApp:
         )
         self.settings = setting.Settings(self)
 
+        self.initialized = self.isInitialized()
+
     @property
     def splash(self):
         return ft.Column([
@@ -145,12 +157,7 @@ class CitadelApp:
                 ft.Container(ft.Image(src="gleif-logo-new.svg", height=200),
                              expand=True)
             ], expand=True),
-            ft.Row([ft.Text(
-                "Click on the red link to connect",
-                italic=True, color="red",
-                text_align=ft.TextAlign.CENTER,
-                expand=True, size=14
-            )]),
+            ft.Row([self.connectHint]),
         ], expand=True)
 
     async def switchPane(self, idx):
@@ -323,9 +330,26 @@ class CitadelApp:
         directing.runController([oobiing.OOBIAuther(hby=hby)])
 
         hby.close()
+        self.initialized = True
         await self.page.update_async()
 
-    async def connect(self, e):
+    def isInitialized(self):
+        cf = configing.Configer(name=CONFIG_FILE,
+                                base="",
+                                headDirPath=".",
+                                temp=False,
+                                reopen=True,
+                                clear=False)
+
+        ks = keeping.Keeper(name=self.username.value,
+                            temp=False,
+                            cf=cf,
+                            reopen=True)
+
+        aeid = ks.gbls.get('aeid')
+        self.initialized = aeid == None        
+
+    async def connect(self):
         self.connectDialog.open = False
         bran = self.passcode.value
 
@@ -366,6 +390,7 @@ class CitadelApp:
         self.agent = agenting.runController(app=self, hby=hby, rgy=rgy)
         self.page.appbar.actions.remove(self.disconnected)
         self.page.appbar.actions.insert(0, self.connected)
+        self.connectHint.visible = False
 
         self.reloadNotes()
         self.reloadWitnessesAndMembers()
@@ -373,6 +398,7 @@ class CitadelApp:
         if self.connectDialog.data is not None:
             await self.switchPane(self.connectDialog.data)
 
+        self.connected = True
         await self.page.update_async()
 
     def reloadWitnessesAndMembers(self):

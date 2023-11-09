@@ -26,3 +26,11 @@ class Brand:
     SECONDARY = "#51dac5"
     ON_SECONDARY = CYPRUS
     INFO_BLUE = "#4ea2f8"
+
+    theme = ft.Theme(
+    color_scheme=ft.ColorScheme(
+        primary=ft.colors.GREEN,
+        primary_container=ft.colors.GREEN_200
+        # ...
+    ),
+)

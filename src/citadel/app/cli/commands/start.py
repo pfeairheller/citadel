@@ -21,7 +21,7 @@ async def launch(args):
 
     async def main(page: ft.Page):
         page.fonts = {
-            "SourceCodePro": "/source_code_pro_static/SourceCodePro-Regular.ttf"
+            "SourceCodePro": "/fonts/SourceCsdsdodePro-Regular.ttf"
         }
 
         app = CitadelApp(page)
@@ -29,6 +29,6 @@ async def launch(args):
             app.build()
         )
 
-    await ft.app_async(target=main, assets_dir="/Users/pfeairheller/git_root/citadel/assets")
+    await ft.app_async(target=main, assets_dir="../../../citadel/assets")
 
 parser.set_defaults(handler=launch)
