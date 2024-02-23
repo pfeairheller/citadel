@@ -11,14 +11,12 @@ from keri.app.keeping import Algos
 from keri.core import coring
 from keri.db import dbing
 
-from citadel.app.colours import Brand
+from citadel.app.colouring import Brand
 
 
 class Identifiers(ft.Column):
-
     def __init__(self, app):
         self.app = app
-
         self.title = ft.Text("Identifiers", size=32)
         self.list = ft.Column([], spacing=0, expand=True)
         self.card = ft.Container(
@@ -70,8 +68,8 @@ class Identifiers(ft.Column):
                     items=[
                         ft.PopupMenuItem(text="View", icon=ft.icons.PAGEVIEW, on_click=self.viewIdentifier,
                                          data=hab),
-                        ft.PopupMenuItem(
-                            text="Delete", icon=ft.icons.DELETE_FOREVER),
+                        ft.PopupMenuItem(text="Delete", icon=ft.icons.DELETE_FOREVER, on_click=self.deleteIdentifier,
+                                         data=hab),
                     ],
                 ),
                 on_click=self.viewIdentifier,
@@ -92,6 +90,13 @@ class Identifiers(ft.Column):
         await self.app.page.update_async()
 
         await viewPanel.update_async()
+
+    async def deleteIdentifier(self, e):
+        hab = e.control.data
+        print(hab.name)
+        self.app.hby.deleteHab(hab.name)
+
+        await self.card.content.update_async()
 
     def build(self):
         return ft.Column([
@@ -299,7 +304,7 @@ class ViewIdentifierPanel(ft.UserControl):
         return []
 
     async def close(self, _):
-        await self.app.showIdentifiers()
+        await self.app.show_identifiers()
 
 
 class CreateIdentifierPanel(ft.UserControl):
@@ -621,7 +626,7 @@ class CreateIdentifierPanel(ft.UserControl):
                 await self.app.snack(f"Creatd AID {hab.pre}.")
 
         self.reset()
-        await self.app.showIdentifiers()
+        await self.app.show_identifiers()
 
     def loadWitnesses(self):
         return [ft.dropdown.Option(wit['id']) for wit in self.app.witnesses]
@@ -631,7 +636,7 @@ class CreateIdentifierPanel(ft.UserControl):
 
     async def cancel(self, _):
         self.reset()
-        await self.app.showIdentifiers()
+        await self.app.show_identifiers()
 
     def reset(self):
         self.alias.value = ""

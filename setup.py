@@ -78,7 +78,7 @@ setup(
         'keri @ git+https://git@github.com/WebOfTrust/keripy.git',
         'multicommand>=1.0.0',
         'dataclasses_json>=0.5.7',
-        'flet>=0.10.3',
+        'flet>=0.12.2',
         'qrcode>=7.4.2'
     ],
     extras_require={
