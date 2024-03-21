@@ -23,7 +23,7 @@ class Agent(doing.DoDoer):
         self.hby = hby
         self.rgy = rgy
 
-        self.swain = delegating.Boatswain(hby=hby)
+        self.swain = delegating.Sealer(hby=hby)
         self.counselor = grouping.Counselor(hby=hby, swain=self.swain)
         self.org = connecting.Organizer(hby=hby)
 
@@ -62,7 +62,7 @@ class Agent(doing.DoDoer):
         handlers = [challengeHandler]
         self.exc = exchanging.Exchanger(hby=hby, handlers=handlers)
         grouping.loadHandlers(exc=self.exc, mux=self.mux)
-        protocoling.loadHandlers(hby=self.hby, exc=self.exc, rgy=self.rgy, notifier=self.notifier)
+        protocoling.loadHandlers(hby=self.hby, exc=self.exc, notifier=self.notifier)
 
         self.rvy = routing.Revery(db=hby.db, cues=self.cues)
         self.kvy = eventing.Kevery(db=hby.db,

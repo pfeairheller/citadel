@@ -1,10 +1,13 @@
+from pathlib import Path
+
 import flet as ft
+from keri import kering
 from keri.app import connecting
 from keri.app.keeping import Algos
 from keri.core import coring
 from keri.core.coring import Tiers
 
-from citadel.app import drawing, agenting
+from citadel.app import drawing
 from citadel.app.colouring import Brand
 from citadel.app.layout import Layout
 
@@ -12,7 +15,7 @@ SALT = "0ACDEyMzQ1Njc4OWxtbm9dEf"
 CONFIG_FILE = 'demo-witness-oobis-schema'
 
 
-class CitadelApp(ft.UserControl):
+class CitadelApp:
 
     def __init__(self, page: ft.Page):
         super().__init__()
@@ -34,16 +37,15 @@ class CitadelApp(ft.UserControl):
         self.tier = Tiers.low
         self.algo = Algos.salty
         self.salt = coring.randomNonce()[2:23]
+        self.agentDrawer = drawing.AgentDrawer(app=self, page=page)
 
-        self.page.end_drawer = drawing.AgentDrawer(page=page).build()
-
-        self.agentDrawer = ft.IconButton(ft.icons.WALLET_ROUNDED,
-                                         tooltip="Agents", on_click=self.toggle_drawer)
+        self.agentDrawerButton = ft.IconButton(ft.icons.WALLET_ROUNDED,
+                                               tooltip="Agents", on_click=self.toggle_drawer)
 
         self.notificationsButton = ft.IconButton(
             ft.icons.NOTIFICATIONS_NONE_SHARP, on_click=self.showNotifications)
 
-        actions = [self.agentDrawer]
+        actions = [self.agentDrawerButton]
         if self.agent is not None:
             actions = [
                 self.notificationsButton,
@@ -59,27 +61,6 @@ class CitadelApp(ft.UserControl):
             actions=actions
         )
 
-        #
-        # column = ft.Column([
-        #     ft.Text("Name"),
-        #     self.username,
-        #     ft.Text("Passcode"),
-        #     self.passcode
-        # ])
-        #
-        # self.connectDialog = ft.AlertDialog(
-        #     modal=True,
-        #     title=ft.Text("Open Wallet"),
-        #     content=ft.Container(content=column, ),
-        #     actions=[
-        #         ft.ElevatedButton("Open", on_click=self.connect,
-        #                           color=ft.colors.WHITE, bgcolor=Brand.SECONDARY),
-        #         ft.ElevatedButton(
-        #             "Cancel", on_click=self.cancel_connect, color=Brand.BATTLESHIP_GRAY, ),
-        #     ],
-        #     actions_alignment=ft.MainAxisAlignment.CENTER,
-        # )
-        #
         # self.inceptionData = ft.Text(value="", tooltip="Inception Data", max_lines=10, size=12,
         #                              overflow=ft.TextOverflow.ELLIPSIS, weight=ft.FontWeight.BOLD,
         #                              font_family="SourceCodePro", width=300)
@@ -110,6 +91,7 @@ class CitadelApp(ft.UserControl):
         # self.agentList = ft.PopupMenuButton(icon=ft.icons.WALLET_SHARP, items=[])
 
     async def toggle_drawer(self, _):
+        self.page.end_drawer = self.agentDrawer.build()
         await self.page.show_end_drawer_async(self.page.end_drawer)
         await self.page.end_drawer.update_async()
 
@@ -118,7 +100,9 @@ class CitadelApp(ft.UserControl):
         if tr.match("/"):
             await self.page.go_async("/splash")
         elif tr.match("/identifiers"):
-            await self.layout.set_identifiers_view()
+            await self.layout.set_identifiers_list()
+        elif tr.match("/identifiers/:prefix/view"):
+            await self.layout.set_identifier_view(tr.prefix)
         elif tr.match("/witnesses"):
             await self.layout.set_witnesses_view()
         elif tr.match("/credentials"):
@@ -209,72 +193,6 @@ class CitadelApp(ft.UserControl):
         await self.contacts.setContacts(contacts)
         await self.contacts.update_async()
 
-    # async def cancel_connect(self, e):
-    #     self.connectDialog.open = False
-    #     await self.page.update_async()
-    #
-    # async def initialize(self, e):
-    #     self.connectDialog.open = False
-    #     await self.page.update_async()
-    #
-    #     self.page.dialog = self.page.initializedialog
-    #     self.page.initializedialog.open = True
-    #     await self.page.update_async()
-    #
-    # async def closeInitialize(self, e):
-    #     self.page.initializedialog.open = False
-    #     await self.page.update_async()
-    #
-    # async def connect(self, _):
-    #     self.connectDialog.open = False
-    #     bran = self.passcode.value
-    #
-    #     cf = configing.Configer(name=CONFIG_FILE,
-    #                             base="",
-    #                             headDirPath=".",
-    #                             temp=False,
-    #                             reopen=True,
-    #                             clear=False)
-    #
-    #     ks = keeping.Keeper(name=self.username.value,
-    #                         temp=False,
-    #                         cf=cf,
-    #                         reopen=True)
-    #
-    #     aeid = ks.gbls.get('aeid')
-    #     if aeid is None:
-    #         print("Keystore must already exist, exiting")
-    #         await self.snack(f"Invalid Username or Passcode, please try again...")
-    #         return
-    #
-    #     ks.close()
-    #
-    #     while True:
-    #         try:
-    #             if bran:
-    #                 bran = bran.replace("-", "")
-    #
-    #             hby = habbing.Habery(
-    #                 name=self.username.value, bran=bran, cf=cf, free=True)
-    #             break
-    #         except (kering.AuthError, ValueError):
-    #             await self.snack(f"Invalid Username or Passcode, please try again...")
-    #             return
-    #
-    #     rgy = credentialing.Regery(
-    #         hby=hby, name=hby.name, base=self.base, temp=self.temp)
-    #     self.agent = agenting.runController(app=self, hby=hby, rgy=rgy)
-    #     # self.page.appbar.actions.remove(self.disconnected)
-    #     # self.page.appbar.actions.insert(0, self.connected)
-    #
-    #     self.reloadNotes()
-    #     self.reloadWitnessesAndMembers()
-    #
-    #     if self.connectDialog.data is not None:
-    #         await self.switchPane(self.connectDialog.data)
-    #
-    #     await self.page.update_async()
-
     def reloadWitnessesAndMembers(self):
         org = connecting.Organizer(hby=self.agent.hby)
 
@@ -297,16 +215,16 @@ class CitadelApp(ft.UserControl):
         )
         return self.layout
 
-    async def open_dlg_modal(self, idx):
-        self.page.dialog = self.connectDialog
-        self.connectDialog.open = True
-        self.connectDialog.data = idx
-        await self.page.update_async()
+    # on_change
+    @property
+    def agent(self):
+        return self._agent
 
-    async def open_init_modal(self, _):
-        self.page.dialog = self.page.initializedialog
-        self.page.initializedialog.open = True
-        await self.page.update_async()
+    @agent.setter
+    def agent(self, agent):
+        self._agent = agent
+        if self._agent is not None:
+            self.layout.navbar.visible = True
 
     async def exitApp(self, e):
         await self.page.window_destroy_async()
@@ -320,3 +238,18 @@ class CitadelApp(ft.UserControl):
     @property
     def hby(self):
         return self.agent.hby if self.agent is not None else None
+
+    @staticmethod
+    def environments():
+        dbhome = Path("/usr/local/var/keri/db")
+        if not dbhome.exists():
+            dbhome = Path(f"{Path.home()}/.keri/db")
+
+        if not dbhome.is_dir():
+            raise kering.ConfigurationError(f"{dbhome} is not a directory")
+
+        envs = []
+        for p in dbhome.iterdir():
+            envs.append(p.stem)
+
+        return envs

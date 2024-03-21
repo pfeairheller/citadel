@@ -4,9 +4,6 @@ from citadel.app import notifying, identifying, contacting, setting, splashing
 from citadel.app.colouring import Brand
 
 
-# from navbar import Navbar
-
-
 class Layout(ft.Row):
     def __init__(self, app, page: ft.Page, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -42,35 +39,42 @@ class Layout(ft.Row):
         self._active_view = view
         self.controls[-1] = self._active_view
 
-    async def set_identifiers_view(self):
+    async def set_identifiers_list(self):
         self.active_view = self.identifiers
+        await self.update_async()
+
         self.navbar.rail.selected_index = Navbar.IDENTIFIERS
+        await self.refresh_identifiers()
+        self.page.floating_action_button = ft.FloatingActionButton(
+            icon=ft.icons.ADD, on_click=self.identifiers.add_identifier, bgcolor=Brand.SECONDARY
+        )
         await self.navbar.update_async()
         await self.page.update_async()
 
+    async def set_identifier_view(self, prefix):
+        hab = self.app.hby.habs[prefix]
+        self.active_view = identifying.ViewIdentifierPanel(self.app, hab)
+        await self.update_async()
+
     async def set_contacts_view(self):
-        print("contacts")
-        self.active_view = self.identifiers
-        self.navbar.rail.selected_index = 0
+        self.active_view = self.contacts
+        self.navbar.rail.selected_index = Navbar.CONTACTS
         await self.navbar.update_async()
         await self.page.update_async()
 
     async def set_credentials_view(self):
-        print("credentials")
-        self.active_view = self.identifiers
-        self.navbar.rail.selected_index = 0
+        self.active_view = self.credentials
+        self.navbar.rail.selected_index = Navbar.CREDENTIALS
         await self.navbar.update_async()
         await self.page.update_async()
 
     async def set_settings_view(self):
-        print("settings")
         self.active_view = self.settings
         self.navbar.rail.selected_index = Navbar.SETTINGS
         await self.navbar.update_async()
         await self.page.update_async()
 
     async def set_splash_view(self):
-        print("splash")
         self.active_view = self.splash
         self.navbar.rail.selected_index = None
         await self.navbar.update_async()
@@ -78,6 +82,12 @@ class Layout(ft.Row):
 
     async def set_oh_no_view(self):
         print("oh no!")
+
+    async def refresh_identifiers(self):
+        aids = self.app.agent.hby.habs.values()
+
+        await self.identifiers.setIdentifiers(aids)
+        await self.identifiers.update_async()
 
 
 class Navbar(ft.UserControl):
@@ -97,6 +107,11 @@ class Navbar(ft.UserControl):
                 icon=ft.icons.PEOPLE_ALT_SHARP,
                 selected_icon=ft.icons.PEOPLE_ALT_OUTLINED,
                 label="Identifiers"
+            ),
+            ft.NavigationRailDestination(
+                icon_content=ft.Icon(ft.icons.FRONT_HAND_SHARP),
+                selected_icon_content=ft.Icon(ft.icons.FRONT_HAND_OUTLINED),
+                label="Witnesses",
             ),
             ft.NavigationRailDestination(
                 icon_content=ft.Icon(ft.icons.BADGE_SHARP),
@@ -130,7 +145,8 @@ class Navbar(ft.UserControl):
 
     async def nav_change(self, e):
         index = e if (type(e) is int) else e.control.selected_index
-        self.rail.selected_index = None
+        self.rail.selected_index = index
+        print(f"routing through nav_change {index}")
         if index == self.IDENTIFIERS:
             self.page.route = "/identifiers"
         elif index == self.CREDENTIALS:
@@ -141,19 +157,3 @@ class Navbar(ft.UserControl):
             self.page.route = "/settings"
 
         await self.page.update_async()
-
-    async def show_identifiers(self):
-        # self.main.controls.pop()
-        # self.main.controls.append(self.identifiers)
-        # await self.main.update_async()
-        await self.refresh_identifiers()
-        self.page.floating_action_button = ft.FloatingActionButton(
-            icon=ft.icons.ADD, on_click=self.layout.identifiers.add_identifier, bgcolor=Brand.SECONDARY
-        )
-        await self.page.update_async()
-
-    async def refresh_identifiers(self):
-        aids = self.layout.app.agent.hby.habs.values()
-
-        await self.layout.identifiers.setIdentifiers(aids)
-        await self.layout.identifiers.update_async()

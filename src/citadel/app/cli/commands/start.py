@@ -37,7 +37,7 @@ async def launch(args):
             app.build()
         )
 
-    await ft.app_async(target=main, assets_dir="../../../citadel/assets")
+    await ft.app_async(target=main, assets_dir="/Users/pfeairheller/git_root/citadel/assets")
 
 
 parser.set_defaults(handler=launch)

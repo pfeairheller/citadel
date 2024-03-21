@@ -1,15 +1,18 @@
 import flet as ft
-from keri.app import configing, habbing, directing
+from keri import kering
+from keri.app import configing, habbing, directing, keeping
 from keri.core import coring
+from keri.vdr import credentialing
 
 from citadel.app.colouring import Brand
+from citadel.core import agenting
 from citadel.tasks import oobiing
 
 DEFAULT_USERNAME = "citadel"
 DEFAULT_PASSCODE = "DoB26Fj4x9LboAFWJra17O"
 
 
-class AgentInitialization(ft.UserControl):
+class AgentInitialization:
 
     def __init__(self, app, page: ft.Page):
         super(AgentInitialization, self).__init__()
@@ -57,7 +60,6 @@ class AgentInitialization(ft.UserControl):
                                 temp=False,
                                 reopen=True,
                                 clear=False)
-        print(f"loading {cf.path}")
         kwa = dict()
 
         kwa["salt"] = coring.Salter(raw=self.app.salt.encode("utf-8")).qb64
@@ -73,21 +75,84 @@ class AgentInitialization(ft.UserControl):
 
         hby.close()
 
-        agents = []
-        if await self.page.client_storage.contains_key_async("gleif.citadel.agents"):
-            agents = await self.page.client_storage.get_async("gleif.citadel.agents")
-
-        agents.append(self.username.value)
-
-        actions = []
-        for a in agents:
-            actions.append(ft.PopupMenuItem(text=a, on_click=self.open), )
-
-        await self.page.client_storage.set_async("gleif.citadel.agents", agents)
         await self.page.update_async()
 
 
-class AgentConnection(ft.UserControl):
+class AgentConnection:
 
-    def __init__(self):
+    def __init__(self, app, page, username):
+        self.app = app
+        self.page = page
+        self.username = username
+        self.passcode = ft.TextField(value=DEFAULT_PASSCODE, password=True)
+
+        column = ft.Column([
+            ft.Text("Name"),
+            ft.TextField(value=self.username, read_only=True),
+            ft.Text("Passcode"),
+            self.passcode
+        ])
+
+        self.connectDialog = ft.AlertDialog(
+            modal=True,
+            title=ft.Text("Open Agent"),
+            content=ft.Container(content=column, ),
+            actions=[
+                ft.ElevatedButton("Open", on_click=self.connect,
+                                  color=ft.colors.WHITE, bgcolor=Brand.SECONDARY),
+                ft.ElevatedButton(
+                    "Cancel", on_click=self.cancel_connect, color=Brand.BATTLESHIP_GRAY, ),
+            ],
+            actions_alignment=ft.MainAxisAlignment.CENTER,
+        )
+
         super(AgentConnection, self).__init__()
+
+    def build(self):
+        return self.connectDialog
+
+    async def cancel_connect(self, e):
+        self.connectDialog.open = False
+        await self.page.update_async()
+
+    async def connect(self, e):
+        self.connectDialog.open = False
+        bran = self.passcode.value
+
+        ks = keeping.Keeper(name=self.username,
+                            temp=False,
+                            reopen=True)
+
+        aeid = ks.gbls.get('aeid')
+        if aeid is None:
+            print("Keystore must already exist, exiting")
+            await self.page.snack(f"Keystore not correcting initialized...")
+            return
+
+        ks.close()
+
+        while True:
+            try:
+                if bran:
+                    bran = bran.replace("-", "")
+
+                hby = habbing.Habery(
+                    name=self.username, bran=bran, free=True)
+                break
+            except (kering.AuthError, ValueError):
+                await self.page.snack(f"Invalid Username or Passcode, please try again...")
+                return
+
+        rgy = credentialing.Regery(
+            hby=hby, name=hby.name, base=self.app.base, temp=False)
+        self.app.agent = agenting.runController(app=self, hby=hby, rgy=rgy)
+        # self.page.appbar.actions.remove(self.disconnected)
+        # self.page.appbar.actions.insert(0, self.connected)
+
+        self.app.reloadNotes()
+        self.app.reloadWitnessesAndMembers()
+
+        if self.connectDialog.data is not None:
+            await self.app.switchPane(self.connectDialog.data)
+
+        await self.page.update_async()

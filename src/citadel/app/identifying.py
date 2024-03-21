@@ -75,21 +75,21 @@ class Identifiers(ft.Column):
                 on_click=self.viewIdentifier,
                 data=hab,
             )
-            bg = Brand.GRAY_LIGHTER if len(
-                self.list.controls) % 2 == 0 else ft.colors.WHITE
+            bg = Brand.GRAY_DARKER if len(
+                self.list.controls) % 2 == 0 else None
             self.list.controls.append(ft.Container(content=tile, bgcolor=bg))
 
         await self.update_async()
 
     async def viewIdentifier(self, e):
         hab = e.control.data
-
-        viewPanel = ViewIdentifierPanel(self.app, hab)
-        self.card.content = viewPanel
-        await self.card.update_async()
+        self.app.page.route = f"/identifiers/{hab.pre}/view"
+        # viewPanel = ViewIdentifierPanel(self.app, hab)
+        # self.card.content = viewPanel
+        # await self.card.update_async()
         await self.app.page.update_async()
-
-        await viewPanel.update_async()
+        #
+        # await viewPanel.update_async()
 
     async def deleteIdentifier(self, e):
         hab = e.control.data
@@ -255,8 +255,8 @@ class ViewIdentifierPanel(ft.UserControl):
             ft.Row([
                 ft.TextButton("Close", on_click=self.close)
             ]),
-        ]), expand=True, alignment=ft.alignment.top_left,
-            padding=padding.only(left=10, top=15))
+        ], scroll=ft.ScrollMode.ALWAYS), expand=True, alignment=ft.alignment.top_left,
+            padding=padding.only(left=10, top=15), )
 
     def loadOOBIs(self, role):
         if role in (kering.Roles.witness,):  # Fetch URL OOBIs for all witnesses
@@ -304,7 +304,8 @@ class ViewIdentifierPanel(ft.UserControl):
         return []
 
     async def close(self, _):
-        await self.app.show_identifiers()
+        self.app.page.route = "/identifiers"
+        await self.app.page.update_async()
 
 
 class CreateIdentifierPanel(ft.UserControl):
@@ -313,7 +314,7 @@ class CreateIdentifierPanel(ft.UserControl):
         super(CreateIdentifierPanel, self).__init__()
 
         self.alias = ft.TextField(
-            hint_text="a-memorable-description", border_color=Brand.SECONDARY)
+            hint_text="Local alias for identifier", border_color=Brand.SECONDARY)
         self.eo = ft.Checkbox(label="Establishment Only", value=False,
                               fill_color=ft.colors.WHITE, check_color=Brand.SECONDARY)
         self.dnd = ft.Checkbox(label="Do Not Delegate", value=False,
@@ -626,7 +627,8 @@ class CreateIdentifierPanel(ft.UserControl):
                 await self.app.snack(f"Creatd AID {hab.pre}.")
 
         self.reset()
-        await self.app.show_identifiers()
+        self.app.page.route = "/identifiers"
+        await self.page.update_async()
 
     def loadWitnesses(self):
         return [ft.dropdown.Option(wit['id']) for wit in self.app.witnesses]
@@ -636,7 +638,8 @@ class CreateIdentifierPanel(ft.UserControl):
 
     async def cancel(self, _):
         self.reset()
-        await self.app.show_identifiers()
+        self.app.page.route = "/identifiers"
+        await self.page.update_async()
 
     def reset(self):
         self.alias.value = ""
