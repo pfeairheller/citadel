@@ -79,7 +79,8 @@ class SettingsPanel(ft.UserControl):
         def salt_changed(e):
             self.app.salt = self.salt.value
 
-        self.salt = ft.TextField(label="Key Salt", value=self.app.salt, password=True, can_reveal_password=True, width=300,
+        self.salt = ft.TextField(label="Key Salt", value=self.app.salt, password=True, can_reveal_password=True,
+                                 width=300,
                                  border_color=ft.colors.RED_400, on_change=salt_changed)
 
         async def resalt(_):
@@ -115,7 +116,7 @@ class SettingsPanel(ft.UserControl):
                                 self.tierGroup
                             ], spacing=20),
                             ft.Row([
-                            ft.Text("Default Key Generation", width=200),
+                                ft.Text("Default Key Generation", width=200),
                                 self.algoGroup
                             ], spacing=20),
                             ft.Row([

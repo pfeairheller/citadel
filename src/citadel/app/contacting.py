@@ -270,4 +270,4 @@ class ViewContactPanel(ft.UserControl):
             padding=padding.only(left=10, top=15))
 
     def close(self, _):
-        self.app.showIdentifiers()
+        self.app.show_identifiers()

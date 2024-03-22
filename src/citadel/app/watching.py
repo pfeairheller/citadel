@@ -269,5 +269,6 @@ class ViewWatcherPanel(ft.UserControl):
         ]), expand=True, alignment=ft.alignment.top_left,
             padding=padding.only(left=10, top=15))
 
-    def close(self, _):
-        self.app.showIdentifiers()
+    async def close(self, _):
+        self.app.page.route = "/identifiers"
+        await self.page.update_async()
