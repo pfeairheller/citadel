@@ -4,15 +4,17 @@ from citadel.app import agenting
 
 
 class AgentDrawer(ft.UserControl):
-    def __init__(self, app, page: ft.Page):
+    def __init__(self, app, page: ft.Page, open=False):
         super(AgentDrawer, self).__init__()
 
         self.page = page
         self.app = app
+        self.open = open
         self.agent_init = agenting.AgentInitialization(self.app, self.page).build()
 
     def build(self):
         agents = []
+
         for agent in self.app.environments():
             agents.append(ft.NavigationDrawerDestination(
                 icon_content=ft.Icon(ft.icons.IRON),
@@ -20,6 +22,7 @@ class AgentDrawer(ft.UserControl):
             ))
 
         return ft.NavigationDrawer(
+            open=self.open,
             controls=[
                 ft.Container(height=12),
                 ft.Container(content=ft.Row(controls=[
@@ -40,7 +43,7 @@ class AgentDrawer(ft.UserControl):
 
     async def agent_change(self, e):
         await self.page.close_end_drawer_async()
-        selected = e.control.controls[e.control.selected_index+3]
+        selected = e.control.controls[e.control.selected_index + 3]
 
         if selected.label == "Initialize new agent":
             self.page.dialog = self.agent_init
@@ -51,4 +54,3 @@ class AgentDrawer(ft.UserControl):
             self.page.dialog = agenting.AgentConnection(self.app, self.page, selected.label).build()
             self.page.dialog.open = True
             await self.page.update_async()
-

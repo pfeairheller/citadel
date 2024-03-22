@@ -72,10 +72,10 @@ setup(
         "resolver",
         # eg: 'keyword1', 'keyword2', 'keyword3',
     ],
-    python_requires='>=3.12.1',
+    python_requires='>=3.10.13',
     install_requires=[
         'hio>=0.6.9',
-        'keri @ git+https://git@github.com/WebOfTrust/keripy.git',
+        'keri>=1.1.8',
         'multicommand>=1.0.0',
         'dataclasses_json>=0.5.7',
         'flet>=0.12.2',

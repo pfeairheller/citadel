@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import flet as ft
-from keri import kering
 from keri.app import connecting
 from keri.app.keeping import Algos
 from keri.core import coring
@@ -29,16 +28,15 @@ class CitadelApp:
         self.members = []
         self.page.vertical_alignment = ft.MainAxisAlignment.CENTER
         self.page.title = "Citadel"
-        self.page.window_width = 800
-        self.page.window_height = 600
+        self.page.window_width = 1024
+        self.page.window_height = 768
         self.page.on_route_change = self.route_change
         self.base = ""
         self.temp = False
         self.tier = Tiers.low
         self.algo = Algos.salty
         self.salt = coring.randomNonce()[2:23]
-        self.agentDrawer = drawing.AgentDrawer(app=self, page=page)
-
+        self.agentDrawer = drawing.AgentDrawer(app=self, page=page, open=True)
         self.agentDrawerButton = ft.IconButton(ft.icons.WALLET_ROUNDED,
                                                tooltip="Agents", on_click=self.toggle_drawer)
 
@@ -246,7 +244,7 @@ class CitadelApp:
             dbhome = Path(f"{Path.home()}/.keri/db")
 
         if not dbhome.is_dir():
-            raise kering.ConfigurationError(f"{dbhome} is not a directory")
+            return []
 
         envs = []
         for p in dbhome.iterdir():

@@ -25,11 +25,11 @@ class AgentInitialization:
             modal=True,
             title=ft.Text("Agent Initialization"),
             content=ft.Column([
-                ft.Text("New Username"),
+                ft.Text("Name"),
                 self.username,
-                ft.Text("New Passcode"),
+                ft.Text("Passcode"),
                 self.passcode,
-            ]),
+            ], height=200),
             actions=[
                 ft.ElevatedButton("Create", on_click=self.generate_habery,
                                   color=ft.colors.WHITE, bgcolor=Brand.SECONDARY),
@@ -87,15 +87,13 @@ class AgentConnection:
         self.passcode = ft.TextField(value=DEFAULT_PASSCODE, password=True)
 
         column = ft.Column([
-            ft.Text("Name"),
-            ft.TextField(value=self.username, read_only=True),
-            ft.Text("Passcode"),
+            ft.Text(f"Open {self.username}"),
+            ft.Text("Enter passcode:"),
             self.passcode
-        ])
+        ], height=200)
 
         self.connectDialog = ft.AlertDialog(
             modal=True,
-            title=ft.Text("Open Agent"),
             content=ft.Container(content=column, ),
             actions=[
                 ft.ElevatedButton("Open", on_click=self.connect,
@@ -103,7 +101,7 @@ class AgentConnection:
                 ft.ElevatedButton(
                     "Cancel", on_click=self.cancel_connect, color=Brand.BATTLESHIP_GRAY, ),
             ],
-            actions_alignment=ft.MainAxisAlignment.CENTER,
+            actions_alignment=ft.MainAxisAlignment.END,
         )
 
         super(AgentConnection, self).__init__()
