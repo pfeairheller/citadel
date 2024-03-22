@@ -56,6 +56,10 @@ class Layout(ft.Row):
         self.active_view = identifying.ViewIdentifierPanel(self.app, hab)
         await self.update_async()
 
+    async def set_identifier_create(self):
+        self.active_view = identifying.CreateIdentifierPanel(self.app)
+        await self.update_async()
+
     async def set_contacts_view(self):
         self.active_view = self.contacts
         self.navbar.rail.selected_index = Navbar.CONTACTS
