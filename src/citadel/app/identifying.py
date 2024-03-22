@@ -14,36 +14,35 @@ from keri.db import dbing
 from citadel.app.colouring import Brand
 
 
-class Identifiers(ft.Column):
-    def __init__(self, app):
+class IdentifierBase(ft.Column):
+
+    def __init__(self, app, panel):
         self.app = app
         self.title = ft.Text("Identifiers", size=32)
-        self.list = ft.Column([], spacing=0, expand=True)
+        self.panel = panel
         self.card = ft.Container(
-            content=self.list,
+            content=self.panel,
             padding=padding.only(top=15), expand=True,
             alignment=ft.alignment.top_left
         )
 
-        super(Identifiers, self).__init__([
+        super(IdentifierBase, self).__init__([
             ft.Row([ft.Icon(ft.icons.PEOPLE_ALT_SHARP, size=32), self.title]),
             ft.Row([self.card])
         ], expand=True, scroll=ft.ScrollMode.ALWAYS)
 
-    async def add_identifier(self, _):
-        self.title.value = "Create Identifier"
-        self.app.page.floating_action_button = None
 
-        identifierPanel = CreateIdentifierPanel(self.app)
-        self.card.content = identifierPanel
-        await self.card.update_async()
+class Identifiers(IdentifierBase):
+    def __init__(self, app):
+        self.list = ft.Column([], spacing=0, expand=True)
+
+        super(Identifiers, self).__init__(app, self.list)
+
+    async def add_identifier(self, _):
+        self.app.page.route = "/identifiers/create"
         await self.app.page.update_async()
 
-        await identifierPanel.update_async()
-
     async def setIdentifiers(self, habs):
-        self.title.value = "Identifiers"
-        self.card.content = self.list
         self.list.controls.clear()
         icon = ft.icons.PERSON_SHARP
         tip = "Identifier"
@@ -84,12 +83,7 @@ class Identifiers(ft.Column):
     async def viewIdentifier(self, e):
         hab = e.control.data
         self.app.page.route = f"/identifiers/{hab.pre}/view"
-        # viewPanel = ViewIdentifierPanel(self.app, hab)
-        # self.card.content = viewPanel
-        # await self.card.update_async()
         await self.app.page.update_async()
-        #
-        # await viewPanel.update_async()
 
     async def deleteIdentifier(self, e):
         hab = e.control.data
@@ -98,17 +92,10 @@ class Identifiers(ft.Column):
 
         await self.card.content.update_async()
 
-    def build(self):
-        return ft.Column([
-            ft.Row([ft.Icon(ft.icons.PEOPLE_ALT_SHARP, size=32), self.title]),
-            ft.Row([self.card])
-        ], expand=True)
 
-
-class ViewIdentifierPanel(ft.UserControl):
+class ViewIdentifierPanel(IdentifierBase):
 
     def __init__(self, app, hab):
-        self.app = app
         self.hab = hab
 
         if isinstance(hab, habbing.GroupHab):
@@ -177,9 +164,9 @@ class ViewIdentifierPanel(ft.UserControl):
 
             ]))
 
-        super(ViewIdentifierPanel, self).__init__()
+        super(ViewIdentifierPanel, self).__init__(app, self.panel())
 
-    def build(self):
+    def panel(self):
         kever = self.hab.kever
         ser = kever.serder
         dgkey = dbing.dgKey(ser.preb, ser.saidb)
@@ -308,10 +295,8 @@ class ViewIdentifierPanel(ft.UserControl):
         await self.app.page.update_async()
 
 
-class CreateIdentifierPanel(ft.UserControl):
+class CreateIdentifierPanel(IdentifierBase):
     def __init__(self, app):
-        self.app = app
-        super(CreateIdentifierPanel, self).__init__()
 
         self.alias = ft.TextField(
             hint_text="Local alias for identifier", border_color=Brand.SECONDARY)
@@ -405,7 +390,7 @@ class CreateIdentifierPanel(ft.UserControl):
 
         ], spacing=15)
 
-        self.witnesses = self.loadWitnesses()
+        self.witnesses = self.loadWitnesses(app)
 
         self.keyTypePanel = ft.Container(
             content=self.salty, padding=padding.only(left=50))
@@ -416,9 +401,11 @@ class CreateIdentifierPanel(ft.UserControl):
                                            text_style=ft.TextStyle(font_family="SourceCodePro"))
         self.witnessList = ft.Column(width=550)
 
-        self.members = self.loadMembers()
+        self.members = self.loadMembers(app)
         self.signingDropdown.options = self.members
         self.rotationDropdown.options = list(self.members)
+
+        super(CreateIdentifierPanel, self).__init__(app, self.panel())
 
     async def keyTypeChanged(self, e):
         self.keyType = e.control.value
@@ -630,11 +617,11 @@ class CreateIdentifierPanel(ft.UserControl):
         self.app.page.route = "/identifiers"
         await self.page.update_async()
 
-    def loadWitnesses(self):
-        return [ft.dropdown.Option(wit['id']) for wit in self.app.witnesses]
+    def loadWitnesses(self, app):
+        return [ft.dropdown.Option(wit['id']) for wit in app.witnesses]
 
-    def loadMembers(self):
-        return [ft.dropdown.Option(key=idx, text=f"{m['alias']}\n({m['id']})") for idx, m in enumerate(self.app.members)]
+    def loadMembers(self, app):
+        return [ft.dropdown.Option(key=idx, text=f"{m['alias']}\n({m['id']})") for idx, m in enumerate(app.members)]
 
     async def cancel(self, _):
         self.reset()
@@ -674,7 +661,7 @@ class CreateIdentifierPanel(ft.UserControl):
             case 10:
                 return 8
 
-    def build(self):
+    def panel(self):
         return ft.Container(
             content=ft.Column([
                 ft.Row([

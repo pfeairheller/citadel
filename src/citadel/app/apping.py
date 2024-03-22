@@ -99,6 +99,8 @@ class CitadelApp:
             await self.page.go_async("/splash")
         elif tr.match("/identifiers"):
             await self.layout.set_identifiers_list()
+        elif tr.match("/identifiers/create"):
+            await self.layout.set_identifier_create()
         elif tr.match("/identifiers/:prefix/view"):
             await self.layout.set_identifier_view(tr.prefix)
         elif tr.match("/witnesses"):
